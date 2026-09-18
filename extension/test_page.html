@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishShield AI - Browser Extension Test Lab</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #1e293b;
+      padding: 36px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    h1 {
+      font-size: 26px;
+      color: #38bdf8;
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    .section {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .danger-title { color: #f87171; }
+    .safe-title { color: #34d399; }
+    .test-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .test-list li {
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: #1e293b;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .test-desc {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    a {
+      color: #60a5fa;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+    .btn-spawn {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-spawn:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🛡️ PhishShield AI - Extension Test Lab</h1>
+    <p class="subtitle">
+      Use this interactive page to test PhishShield's real-time link scanning, high-visibility warning badges, and click interception modal.
+    </p>
+
+    <!-- Dangerous Phishing Links -->
+    <div class="section">
+      <div class="section-title danger-title">
+        <span>🛑</span> Phishing & Deceptive Test Links (Should be Flagged & Blocked)
+      </div>
+      <ul class="test-list">
+        <li>
+          <span class="test-desc">1. Homograph Attack (Cyrillic 'а' replacing Latin 'a'):</span>
+          <div>
+            <a href="http://pаypal.com/login-verification">Sign in to PayPal Security</a>
+          </div>
+        </li>
+        <li>
+          <span class="test-desc">2. Typosquatting Variant (Substituted '1' for 'l' + high-risk TLD):</span>
+          <div>
+            <a href="http://paypa1-security.xyz/update-billing">Verify your PayPal credentials</a>
+          </div>
+        </li>
+        <li>
+          <span class="test-desc">3. Deceptive Anchor Text Mismatch (Claims Google, links elsewhere):</span>
+          <div>
+            <a href="http://attacker-controlled-server.com/malicious">https://www.google.com/security/login</a>
+          </div>
+        </li>
+        <li>
+          <span class="test-desc">4. Raw IP Hostname (Insecure HTTP + credential keyword):</span>
+          <div>
+            <a href="http://192.168.1.50/banking-login.php">Emergency Banking Verification</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Safe Links -->
+    <div class="section">
+      <div class="section-title safe-title">
+        <span>✅</span> Legitimate Links (Should Remain Untouched)
+      </div>
+      <ul class="test-list">
+        <li>
+          <span class="test-desc">Legitimate Repository:</span>
+          <div>
+            <a href="https://github.com/Kidus-yahun/PhishShield-AI">https://github.com/Kidus-yahun/PhishShield-AI</a>
+          </div>
+        </li>
+        <li>
+          <span class="test-desc">Standard HTTPS Domain:</span>
+          <div>
+            <a href="https://www.wikipedia.org">Visit Wikipedia Official</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Dynamic Link Injection (MutationObserver test) -->
+    <div class="section">
+      <div class="section-title" style="color: #60a5fa;">
+        <span>⚡</span> Test Dynamic Content (MutationObserver)
+      </div>
+      <p style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
+        Click below to simulate an incoming message or post containing a malicious link to see PhishShield detect it in real time:
+      </p>
+      <button class="btn-spawn" id="btn-spawn">Simulate Incoming Phishing Link</button>
+      <div id="dynamic-container" style="margin-top: 14px;"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("btn-spawn").addEventListener("click", () => {
+      const container = document.getElementById("dynamic-container");
+      const item = document.createElement("div");
+      item.style.padding = "10px";
+      item.style.background = "#0f172a";
+      item.style.borderRadius = "8px";
+      item.style.border = "1px solid #334155";
+      item.style.marginTop = "8px";
+      item.innerHTML = `
+        <span style="font-size: 12px; color: #cbd5e1;">[New Message Received]</span><br>
+        <a href="http://chase-security-update.top/login">Urgent Chase Alert: Click here to verify account</a>
+      `;
+      container.appendChild(item);
+    });
+  </script>
+</body>
+</html>
