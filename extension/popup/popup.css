@@ -141,6 +141,11 @@ input:checked + .slider:before {
   box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
 }
 
+.status-card.disabled {
+  background: rgba(100, 116, 139, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
 .status-icon {
   font-size: 22px;
   flex-shrink: 0;
@@ -158,6 +163,10 @@ input:checked + .slider:before {
 
 .status-card.danger .status-title {
   color: #f87171;
+}
+
+.status-card.disabled .status-title {
+  color: #94a3b8;
 }
 
 .status-subtitle {
