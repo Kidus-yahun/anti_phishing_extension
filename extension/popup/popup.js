@@ -113,4 +113,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   btnOpenDashboard.addEventListener("click", async () => {
     await chrome.tabs.create({ url: "http://127.0.0.1:8000" });
   });
+
+  // 5. Reset All-Time Counter Listener
+  const btnResetStats = document.getElementById("btn-reset-stats");
+  if (btnResetStats) {
+    btnResetStats.addEventListener("click", async () => {
+      await chrome.storage.local.set({ totalBlockedAllTime: 0 });
+      allTimeCount.textContent = "0";
+    });
+  }
 });
