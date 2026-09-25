@@ -51,3 +51,15 @@ def test_composite_risk_scorer():
     assert risk["risk_score"] > 65.0
     assert risk["risk_level"] in ["MEDIUM RISK", "HIGH / CRITICAL RISK"]
     assert len(risk["flags"]) == 3
+
+def test_roberta_dual_engine_status():
+    nlp = NLPEngine(model_path="app/models/phishing_model.pkl")
+    status = nlp.get_status()
+    assert "active_model" in status
+    assert "fallback_available" in status
+
+    # Test social engineering prediction
+    text = "Please verify your employee portal credentials before end of day to prevent payroll delay."
+    res = nlp.predict(text)
+    assert res["score"] >= 15.0
+    assert "model_used" in res

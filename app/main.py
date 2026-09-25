@@ -17,11 +17,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
 # Setup templates
-templates = Jinja2Templates(directory="app/templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 # Instantiate NLP Engine
-nlp_engine = NLPEngine(model_path="app/models/phishing_model.pkl")
+nlp_engine = NLPEngine()
 
 class AnalysisRequest(BaseModel):
     text: Optional[str] = ""
@@ -40,11 +43,13 @@ async def serve_test_lab(request: Request):
 
 @app.get("/api/health")
 async def health_check():
-    """Engine health status."""
+    """Engine health status and AI model details."""
+    ai_status = nlp_engine.get_status()
     return {
         "status": "online",
-        "nlp_model_loaded": nlp_engine.classifier is not None,
-        "engine_version": "1.0.0"
+        "nlp_model_loaded": nlp_engine.classifier is not None or ai_status.get("roberta_ready"),
+        "ai_engine": ai_status,
+        "engine_version": "1.1.0"
     }
 
 @app.post("/api/analyze")

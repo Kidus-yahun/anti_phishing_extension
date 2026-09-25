@@ -55,9 +55,9 @@
                 <a href="/test-lab" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-flask"></i> Threat Test Lab
                 </a>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span>
-                    NLP & Heuristic Engine Active
+                <span id="ai-model-badge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse mr-2"></span>
+                    <span id="ai-model-text">RoBERTa & NLP Engine Active</span>
                 </span>
             </div>
         </div>
@@ -72,8 +72,11 @@
             <!-- Quick Presets -->
             <div class="glass-panel p-4 rounded-2xl flex flex-wrap gap-2 items-center">
                 <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Test Presets:</span>
+                <button onclick="loadSample('roberta_stealth')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-brain"></i> RoBERTa Stealth Phish
+                </button>
                 <button onclick="loadSample('phishing')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Phishing Email
+                    <i class="fa-solid fa-triangle-exclamation"></i> Urgent Phish
                 </button>
                 <button onclick="loadSample('homograph')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-link"></i> Spoofed URL
@@ -187,6 +190,11 @@
 
     <script>
         const samples = {
+            roberta_stealth: {
+                text: "Good morning team,\n\nFollowing our leadership review, human resources has updated the corporate employee compensation schedules. Please review the attached benefits document and verify your employee portal credentials before end of day to prevent payroll accounting delays.\n\nBest regards,\nCorporate Human Resources",
+                url: "http://corporate-payroll-verification.xyz/portal",
+                header: "From: HR Compensation <hr@corporate-payroll-verification.xyz>\nAuthentication-Results: spf=none"
+            },
             phishing: {
                 text: "URGENT: Your PayPal account has been suspended due to an unauthorized login attempt from an unknown device. Please click the link below to verify your password and update your billing credentials immediately to avoid permanent termination within 24 hours.",
                 url: "http://paypa1-security-verification.xyz/login.php",
@@ -199,10 +207,25 @@
             },
             safe: {
                 text: "Hi Alex,\n\nPlease find attached the minutes from our team sync call this morning. Let me know if you have any feedback before our client presentation tomorrow.",
-                url: "https://github.com/Kidus-yahun/Smart-Bus-Booking",
+                url: "https://github.com/Kidus-yahun/anti_phishing_extension",
                 header: "From: Sarah Jenkins <sarah.jenkins@company.com>\nReturn-Path: <sarah.jenkins@company.com>\nAuthentication-Results: spf=pass dkim=pass dmarc=pass"
             }
         };
+
+        // Query AI model status on load
+        async function checkAiStatus() {
+            try {
+                const res = await fetch('/api/health');
+                const data = await res.json();
+                const modelText = document.getElementById('ai-model-text');
+                if (data.ai_engine && data.ai_engine.roberta_ready) {
+                    modelText.innerText = "RoBERTa Transformer Online";
+                } else {
+                    modelText.innerText = "NLP Engine (Dual-Mode Ready)";
+                }
+            } catch (e) {}
+        }
+        window.addEventListener('DOMContentLoaded', checkAiStatus);
 
         function loadSample(key) {
             const data = samples[key];
