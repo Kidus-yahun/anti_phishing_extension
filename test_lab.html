@@ -4,20 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PhishShield AI - Threat Simulation & Test Lab</title>
-  <link rel="stylesheet" href="extension/content.css">
+  <link rel="stylesheet" href="content.css">
   <style>
     :root {
-      --bg-main: #0b0f19;
-      --bg-card: #131d31;
-      --bg-inner: #1a2640;
-      --text-main: #f1f5f9;
+      --bg-main: #070a13;
+      --bg-card: rgba(15, 23, 42, 0.65);
+      --bg-inner: #090e1a;
+      --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border-color: rgba(255, 255, 255, 0.08);
-      --red-accent: #ef4444;
-      --red-bg: rgba(239, 68, 68, 0.12);
+      --red-accent: #f43f5e;
+      --red-bg: rgba(244, 63, 94, 0.14);
       --green-accent: #10b981;
-      --green-bg: rgba(16, 185, 129, 0.12);
+      --green-bg: rgba(16, 185, 129, 0.14);
       --blue-accent: #38bdf8;
+      --purple-accent: #c084fc;
       --yellow-accent: #f59e0b;
     }
 
@@ -28,27 +29,34 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
       background-color: var(--bg-main);
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56, 189, 248, 0.15), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(168, 85, 247, 0.08), transparent 60%);
+      background-attachment: fixed;
       color: var(--text-main);
       line-height: 1.5;
-      padding: 30px 20px 60px;
+      padding: 36px 24px 64px;
+      -webkit-font-smoothing: antialiased;
     }
 
     .container {
-      max-width: 1060px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
     /* Header */
     .lab-header {
-      background: linear-gradient(135deg, #131d31 0%, #1e293b 100%);
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.75) 100%);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 28px 32px;
+      border-radius: 20px;
+      padding: 30px 36px;
       margin-bottom: 28px;
       position: relative;
       overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
 
     .lab-header::before {
@@ -58,50 +66,76 @@
       left: 0;
       width: 4px;
       height: 100%;
-      background: var(--blue-accent);
+      background: linear-gradient(180deg, #38bdf8, #3b82f6);
     }
 
     .badge-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
       background: rgba(56, 189, 248, 0.12);
       color: var(--blue-accent);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      padding: 4px 12px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 5px 14px;
       border-radius: 20px;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 12px;
+      letter-spacing: 0.6px;
+    }
+
+    .btn-nav-back {
+      font-size: 12px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-decoration: none;
+      padding: 7px 16px;
+      border-radius: 10px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-nav-back:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: rgba(56, 189, 248, 0.6);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+      transform: translateY(-1px);
     }
 
     h1 {
       font-size: 26px;
       font-weight: 800;
       letter-spacing: -0.5px;
+      margin-top: 12px;
       margin-bottom: 8px;
+      color: #ffffff;
     }
 
     .lab-header p {
       color: var(--text-muted);
       font-size: 14px;
-      max-width: 820px;
+      max-width: 860px;
+      line-height: 1.55;
     }
 
     /* Instructions Grid */
     .instructions-card {
       background: var(--bg-card);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px 20px;
+      border-radius: 14px;
+      padding: 16px 22px;
       margin-bottom: 24px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 16px;
     }
 
     .inst-item {
@@ -109,6 +143,7 @@
       align-items: center;
       gap: 10px;
       font-size: 13px;
+      color: #cbd5e1;
     }
 
     .inst-num {
@@ -128,21 +163,43 @@
     /* Threat Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(490px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 22px;
       margin-bottom: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .card {
       background: var(--bg-card);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 22px;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
     }
 
     .card:hover {
-      border-color: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
     }
 
     .card-header {
@@ -150,43 +207,45 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 16px;
-      padding-bottom: 12px;
+      padding-bottom: 14px;
       border-bottom: 1px solid var(--border-color);
     }
 
     .card-title {
       font-size: 15px;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: -0.2px;
       display: flex;
       align-items: center;
       gap: 8px;
+      color: #ffffff;
     }
 
     .card-tag {
       font-size: 10px;
       font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
     .tag-danger {
       background: var(--red-bg);
-      color: #f87171;
-      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.4);
     }
 
     .tag-safe {
       background: var(--green-bg);
       color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
+      border: 1px solid rgba(16, 185, 129, 0.4);
     }
 
     .tag-interactive {
-      background: rgba(245, 158, 11, 0.12);
+      background: rgba(245, 158, 11, 0.14);
       color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.3);
+      border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
     /* Link list */
@@ -199,16 +258,23 @@
     .link-row {
       background: var(--bg-inner);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
       gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+    }
+
+    .link-row:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: #0d1424;
     }
 
     .link-label {
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -220,15 +286,21 @@
       font-weight: 600;
       text-decoration: underline;
       word-break: break-all;
+      transition: color 0.2s ease;
+    }
+
+    .link-row a:hover {
+      color: #93c5fd;
     }
 
     .link-target {
-      font-family: monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
       color: #94a3b8;
-      background: rgba(0, 0, 0, 0.25);
-      padding: 3px 6px;
-      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 4px 8px;
+      border-radius: 6px;
       display: inline-block;
       width: fit-content;
     }
@@ -236,49 +308,56 @@
     /* Simulation Playground */
     .simulator-section {
       background: var(--bg-card);
+      backdrop-filter: blur(16px);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 24px;
+      border-radius: 18px;
+      padding: 26px;
       margin-top: 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
     }
 
     .btn-group {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-top: 14px;
+      margin-top: 16px;
     }
 
     .btn {
-      padding: 10px 18px;
+      padding: 11px 20px;
       font-size: 13px;
       font-weight: 700;
-      border-radius: 8px;
+      border-radius: 10px;
       border: none;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn-primary {
-      background: #2563eb;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
       color: #ffffff;
+      border: 1px solid rgba(96, 165, 250, 0.4);
     }
 
     .btn-primary:hover {
-      background: #1d4ed8;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
       transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
     }
 
     .btn-secondary {
-      background: #334155;
+      background: #1e293b;
       color: #f1f5f9;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .btn-secondary:hover {
-      background: #475569;
+      background: #334155;
+      transform: translateY(-1px);
     }
 
     /* Dynamic Container */
@@ -296,8 +375,8 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(5, 8, 17, 0.88);
+      backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -305,26 +384,31 @@
     }
 
     .mock-modal {
-      background: #1e293b;
-      border: 1px solid #475569;
-      border-radius: 16px;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
       max-width: 480px;
       width: 90%;
-      padding: 24px;
+      padding: 28px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     }
 
     .mock-modal-close {
-      margin-top: 16px;
-      background: #475569;
+      margin-top: 18px;
+      background: #334155;
       color: #ffffff;
       border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding: 10px 20px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
+      transition: background 0.2s ease;
+    }
+
+    .mock-modal-close:hover {
+      background: #475569;
     }
   </style>
 </head>
@@ -336,7 +420,7 @@
     <header class="lab-header">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
         <div class="badge-pill" style="margin-bottom: 0;">🛡️ PhishShield Security Sandbox</div>
-        <a id="nav-dashboard-link" href="index.html" style="font-size: 12px; font-weight: 600; color: #38bdf8; text-decoration: none; padding: 6px 14px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+        <a id="nav-dashboard-link" href="dashboard.html" style="font-size: 12px; font-weight: 600; color: #38bdf8; text-decoration: none; padding: 6px 14px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
           ← Back to Threat Dashboard
         </a>
       </div>
@@ -543,11 +627,11 @@
 
   </div>
 
-  <!-- Test Lab Controls Script -->
+  <!-- Test Lab Controls Script (External file for Manifest V3 CSP compliance) -->
   <script src="test_lab.js"></script>
 
-  <!-- PhishShield Protection Scripts -->
-  <script src="extension/heuristics.js"></script>
-  <script src="extension/content.js"></script>
+  <!-- PhishShield Protection Scripts (Direct execution in test sandbox) -->
+  <script src="heuristics.js"></script>
+  <script src="content.js"></script>
 </body>
 </html>

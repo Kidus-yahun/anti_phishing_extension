@@ -1,649 +1,166 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishShield AI - Threat Detection Platform</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        cyber: {
-                            900: '#0b0f19',
-                            800: '#111827',
-                            700: '#1f293d',
-                            accent: '#3b82f6',
-                            danger: '#ef4444',
-                            warning: '#f59e0b',
-                            success: '#10b981'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .glass-panel {
-            background: rgba(31, 41, 61, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glow-red { box-shadow: 0 0 25px rgba(239, 68, 68, 0.25); }
-        .glow-green { box-shadow: 0 0 25px rgba(16, 185, 129, 0.25); }
-        .glow-yellow { box-shadow: 0 0 25px rgba(245, 158, 11, 0.25); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishShield AI - Threat Detection Platform</title>
+  <link rel="stylesheet" href="dashboard.css">
 </head>
-<body class="bg-cyber-900 text-slate-100 min-h-screen font-sans flex flex-col">
+<body>
 
-    <!-- Navbar -->
-    <header class="border-b border-slate-800 bg-cyber-800/80 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-                    <i class="fa-solid fa-shield-halved text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-wide text-white">PhishShield <span class="text-blue-400">AI</span></h1>
-                    <p class="text-xs text-slate-400">Social Engineering & Threat Detection Platform</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-4">
-                <a id="nav-test-lab" href="test_lab.html" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-flask"></i> Threat Test Lab
-                </a>
-                <span id="ai-model-badge" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    <span id="ai-status-dot" class="w-2 h-2 rounded-full bg-blue-400 animate-pulse mr-2"></span>
-                    <span id="ai-model-text">Checking Engine Status...</span>
-                </span>
-            </div>
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <h1 class="brand-title">PhishShield <span class="accent">AI</span></h1>
+          <p class="brand-subtitle">Social Engineering & Multi-Vector Threat Analysis</p>
         </div>
-    </header>
+      </div>
+      <div class="nav-actions">
+        <a id="nav-test-lab" href="test_lab.html" class="nav-btn">
+          <span>🧪</span> Threat Test Lab
+        </a>
+        <span id="ai-model-badge" class="status-pill">
+          <span id="ai-status-dot" class="status-dot pulse"></span>
+          <span id="ai-model-text">Checking Engine Status...</span>
+        </span>
+      </div>
+    </div>
+  </header>
 
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- Input Column (Left) -->
+    <div class="column">
+      
+      <!-- Quick Presets -->
+      <div class="glass-panel presets-card">
+        <span class="presets-label">Test Presets:</span>
+        <button type="button" class="btn-preset btn-preset-purple" data-preset="laya_stealth">
+          <span>🧠</span> Laya Stealth Phish
+        </button>
+        <button type="button" class="btn-preset btn-preset-red" data-preset="phishing">
+          <span>⚠️</span> Urgent PayPal Phish
+        </button>
+        <button type="button" class="btn-preset btn-preset-amber" data-preset="homograph">
+          <span>🔗</span> Spoofed URL
+        </button>
+        <button type="button" class="btn-preset btn-preset-green" data-preset="safe">
+          <span>✅</span> Legitimate Email
+        </button>
+      </div>
+
+      <!-- Threat Scanner Inputs Card -->
+      <div class="glass-panel scanner-card">
+        <h2 class="card-title">
+          <span>🔬</span> Threat Scanner Inputs
+        </h2>
+
+        <form id="analyze-form">
+          <!-- Text / Body input -->
+          <div class="form-group">
+            <label class="form-label" for="input-text">
+              Email / Message Body (NLP Urgency & Social Engineering Analysis)
+            </label>
+            <textarea id="input-text" rows="5" class="form-textarea" placeholder="Paste suspicious email text, notification body, or message here..."></textarea>
+          </div>
+
+          <!-- URL input -->
+          <div class="form-group">
+            <label class="form-label" for="input-url">
+              Embedded Link / Target URL (Autonomous Domain & Spoofing Inspection)
+            </label>
+            <input type="text" id="input-url" class="form-input" placeholder="e.g. http://paypa1-security-verification.xyz/login.php">
+          </div>
+
+          <!-- Email Headers input -->
+          <div class="form-group">
+            <label class="form-label" for="input-header">
+              Raw Email Headers (Optional - SPF/DKIM/From Mismatch)
+            </label>
+            <textarea id="input-header" rows="3" class="form-textarea code" placeholder="From: Paypal Support <attacker@random.com>&#10;Return-Path: <bounce@unrelated.com>&#10;Authentication-Results: spf=fail dkim=fail"></textarea>
+          </div>
+
+          <!-- Action Button -->
+          <button type="submit" id="btn-submit" class="btn-submit">
+            <span>⚡</span> Analyze Threat Vectors
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Output Column (Right) -->
+    <div class="column">
+      
+      <!-- Result Overview Card -->
+      <div id="result-card" class="glass-panel results-card">
         
-        <!-- Input Column (7 cols) -->
-        <div class="lg:col-span-7 flex flex-col space-y-6">
-            
-            <!-- Quick Presets -->
-            <div class="glass-panel p-4 rounded-2xl flex flex-wrap gap-2 items-center">
-                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Test Presets:</span>
-                <button onclick="loadSample('laya_stealth')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 border border-purple-500/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-brain"></i> Laya Stealth Phish
-                </button>
-                <button onclick="loadSample('phishing')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Urgent PayPal Phish
-                </button>
-                <button onclick="loadSample('homograph')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-link"></i> Spoofed URL
-                </button>
-                <button onclick="loadSample('safe')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-circle-check"></i> Legitimate Email
-                </button>
-            </div>
-
-            <!-- Analysis Card -->
-            <div class="glass-panel p-6 rounded-2xl flex-1 flex flex-col">
-                <h2 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-microscope text-blue-400"></i> Threat Scanner Inputs
-                </h2>
-
-                <form id="analyze-form" onsubmit="submitAnalysis(event)" class="space-y-4 flex-1 flex flex-col">
-                    
-                    <!-- Text / Body input -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Email / Message Body (NLP Urgency & Social Engineering Analysis)</label>
-                        <textarea id="input-text" rows="5" class="w-full bg-cyber-900/90 border border-slate-700/70 rounded-xl p-3 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-slate-500" placeholder="Paste suspicious email text, notification body, or message here..."></textarea>
-                    </div>
-
-                    <!-- URL input -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Embedded Link / Target URL (Autonomous Domain & Spoofing Inspection)</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-                                <i class="fa-solid fa-globe text-xs"></i>
-                            </div>
-                            <input type="text" id="input-url" class="w-full bg-cyber-900/90 border border-slate-700/70 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-slate-500" placeholder="e.g. http://paypa1-security-verification.xyz/login.php">
-                        </div>
-                    </div>
-
-                    <!-- Email Headers input -->
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Raw Email Headers (Optional - SPF/DKIM/From Mismatch)</label>
-                        <textarea id="input-header" rows="3" class="w-full bg-cyber-900/90 border border-slate-700/70 rounded-xl p-3 text-xs text-slate-300 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-slate-500" placeholder="From: Paypal Support <attacker@random.com>&#10;Return-Path: <bounce@unrelated.com>&#10;Authentication-Results: spf=fail dkim=fail"></textarea>
-                    </div>
-
-                    <!-- Action Button -->
-                    <div class="pt-2">
-                        <button type="submit" id="btn-submit" class="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-bolt"></i> Analyze Threat Vectors
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <!-- Initial Blank State -->
+        <div id="initial-state" class="state-container">
+          <div class="empty-icon">🛡️</div>
+          <p class="empty-text">Ready to inspect suspicious links, emails, or headers.</p>
+          <p class="empty-subtext">Select a test preset or paste custom content to evaluate risk.</p>
         </div>
 
-        <!-- Output Column (5 cols) -->
-        <div class="lg:col-span-5 flex flex-col space-y-6">
-            
-            <!-- Result Overview Card -->
-            <div id="result-card" class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center min-h-[320px]">
-                
-                <div id="initial-state" class="flex flex-col items-center justify-center text-slate-500 py-12">
-                    <i class="fa-solid fa-shield-cat text-5xl mb-4 text-slate-600 animate-pulse"></i>
-                    <p class="text-sm font-medium">Ready to inspect suspicious links, emails, or headers.</p>
-                    <p class="text-xs text-slate-600 mt-1">Select a test preset above or paste your content to begin.</p>
-                </div>
+        <!-- Loading State -->
+        <div id="loading-state" class="state-container hidden">
+          <div class="spinner"></div>
+          <p class="empty-text">Analyzing NLP patterns, domain heuristics & headers...</p>
+        </div>
 
-                <div id="loading-state" class="hidden flex-col items-center justify-center py-12">
-                    <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                    <p class="text-sm text-slate-300 font-medium">Analyzing NLP patterns, domain heuristics & headers...</p>
-                </div>
-
-                <div id="analysis-output" class="hidden w-full space-y-6">
-                    
-                    <!-- Gauge / Badge -->
-                    <div class="flex flex-col items-center">
-                        <div id="score-ring" class="relative w-36 h-36 rounded-full flex items-center justify-center border-4 border-slate-700 bg-cyber-900/80 mb-3">
-                            <div class="text-center">
-                                <span id="out-score" class="text-4xl font-extrabold tracking-tight">0%</span>
-                                <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">Risk Score</span>
-                            </div>
-                        </div>
-
-                        <span id="out-badge" class="px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider">
-                            UNKNOWN
-                        </span>
-
-                        <p id="out-verdict" class="text-xs text-slate-300 font-medium mt-3 px-4">
-                            -
-                        </p>
-                    </div>
-
-                    <!-- Breakdown Accordion / Flags -->
-                    <div class="text-left space-y-3">
-                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                            <span>Detected Threat Indicators</span>
-                            <span id="flag-count" class="text-blue-400">0 flags</span>
-                        </h3>
-
-                        <div id="out-flags" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                            <!-- Flags dynamically injected -->
-                        </div>
-                    </div>
-
-                </div>
+        <!-- Analysis Output -->
+        <div id="analysis-output" class="state-container hidden" style="padding: 0;">
+          
+          <!-- Gauge / Circle -->
+          <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 160 160">
+              <circle class="gauge-bg" cx="80" cy="80" r="70" />
+              <circle id="gauge-bar" class="gauge-bar" cx="80" cy="80" r="70" />
+            </svg>
+            <div class="gauge-center-content">
+              <span id="out-score" class="score-value">0%</span>
+              <span class="score-label">Threat Score</span>
             </div>
+          </div>
+
+          <div id="out-badge" class="risk-badge">SAFE</div>
+          <p id="out-verdict" class="verdict-text"></p>
+          
+          <div id="engine-mode-tag" class="engine-source-pill">
+            ⚡ Engine: Standalone Local Client Engine
+          </div>
+
+          <!-- Flags Container -->
+          <div class="flags-section">
+            <div class="flags-header">
+              <span class="flags-title">Threat Indicators</span>
+              <span id="flag-count" class="flags-count">0 flags detected</span>
+            </div>
+            <div id="out-flags" class="flags-list"></div>
+          </div>
 
         </div>
 
-    </main>
+      </div>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800/80 py-4 bg-cyber-800/40 text-center text-xs text-slate-500">
-        PhishShield AI Security Engine &copy; 2026 | Multi-Vector Social Engineering Analysis Platform
-    </footer>
+    </div>
 
-    <script>
-        // Preset test cases
-        const samples = {
-            laya_stealth: {
-                text: "Good morning team,\n\nFollowing our executive review, human resources has updated employee compensation schedules. Please review the attached compensation document and verify your employee portal credentials before end of day to prevent payroll accounting delays.\n\nBest regards,\nCorporate Human Resources",
-                url: "http://corporate-payroll-verification.xyz/portal",
-                header: "From: HR Compensation <hr@corporate-payroll-verification.xyz>\nAuthentication-Results: spf=none"
-            },
-            phishing: {
-                text: "URGENT: Your PayPal account has been suspended due to an unauthorized login attempt from an unknown device. Please click the link below to verify your password and update your billing credentials immediately to avoid permanent termination within 24 hours.",
-                url: "http://paypa1-security-verification.xyz/login.php",
-                header: "From: PayPal Security <support@paypa1-security-verification.xyz>\nReturn-Path: <bounce@untrustworthy-host.ru>\nAuthentication-Results: spf=fail dkim=fail dmarc=fail"
-            },
-            homograph: {
-                text: "Dear customer, your Google Drive storage is full. Please extend your subscription.",
-                url: "http://pаypal.com/verify-account", // Contains Cyrillic 'а'
-                header: "From: Google Drive Alert <no-reply@g00gle-drive-billing.com>\nAuthentication-Results: spf=softfail"
-            },
-            safe: {
-                text: "Hi Alex,\n\nPlease find attached the minutes from our team sync call this morning. Let me know if you have any feedback before our client presentation tomorrow.",
-                url: "https://github.com/Kidus-yahun/anti_phishing_extension",
-                header: "From: Sarah Jenkins <sarah.jenkins@company.com>\nReturn-Path: <sarah.jenkins@company.com>\nAuthentication-Results: spf=pass dkim=pass dmarc=pass"
-            }
-        };
+  </main>
 
-        // --- Client-Side Threat Engine (Standalone PC Offline Engine) ---
-        const ClientThreatEngine = {
-            URGENCY_KEYWORDS: [
-                "immediate action", "account suspended", "suspended within 24 hours",
-                "unauthorized login", "action required", "terminate account",
-                "security alert", "suspicious activity", "locked out", "urgent notice",
-                "final warning", "verify immediately", "failure to respond"
-            ],
-            CREDENTIAL_KEYWORDS: [
-                "verify password", "update billing", "confirm credit card", "ssn",
-                "social security", "pin number", "re-enter credentials", "log in to verify",
-                "confirm identity", "bank details", "wire transfer", "gift card"
-            ],
-            IMPERSONATION_KEYWORDS: [
-                "it department", "security team", "helpdesk", "administrator",
-                "system alert", "customer support", "fraud department", "ceo request"
-            ],
-            MONITORED_BRANDS: [
-                "paypal", "google", "microsoft", "apple", "amazon", "facebook",
-                "netflix", "bankofamerica", "chase", "wellsfargo", "github",
-                "linkedin", "dropbox", "binance", "coinbase"
-            ],
-            HIGH_RISK_TLDS: ["top", "xyz", "club", "work", "click", "zip", "mov", "gq", "cf", "tk", "ml", "ga"],
+  <!-- Extension Stats Footer -->
+  <footer class="extension-stats-bar">
+    <div>
+      🛡️ PhishShield AI Browser Extension • Protected Tabs: <strong id="stat-total-blocked" style="color: #60a5fa;">0</strong> Threats Blocked All-Time
+    </div>
+    <div>
+      v1.0.0 • Client-Side Autonomous Protection
+    </div>
+  </footer>
 
-            analyzeText(text) {
-                if (!text || !text.trim()) return { score: 0.0, flags: [] };
-                const lower = text.toLowerCase();
-                const flags = [];
-                let score = 0.0;
-
-                const foundUrgency = this.URGENCY_KEYWORDS.filter(k => lower.includes(k));
-                if (foundUrgency.length) {
-                    score += Math.min(45, foundUrgency.length * 15);
-                    flags.push(`High urgency / pressure language detected: ${foundUrgency.join(', ')}.`);
-                }
-
-                const foundCreds = this.CREDENTIAL_KEYWORDS.filter(k => lower.includes(k));
-                if (foundCreds.length) {
-                    score += Math.min(45, foundCreds.length * 15);
-                    flags.push(`Sensitive credential or financial requests detected: ${foundCreds.join(', ')}.`);
-                }
-
-                const foundImpersonation = this.IMPERSONATION_KEYWORDS.filter(k => lower.includes(k));
-                if (foundImpersonation.length) {
-                    score += Math.min(25, foundImpersonation.length * 10);
-                    flags.push(`Impersonation or authority cues detected: ${foundImpersonation.join(', ')}.`);
-                }
-
-                const caps = text.match(/\b[A-Z]{4,}\b/g) || [];
-                if (caps.length >= 3) {
-                    score += 10;
-                    flags.push("Excessive uppercase words used to induce panic.");
-                }
-
-                return { score: Math.min(100, score), flags };
-            },
-
-            analyzeUrl(urlStr) {
-                if (!urlStr || !urlStr.trim()) return { score: 0.0, flags: [] };
-                let parsed;
-                try {
-                    parsed = new URL(urlStr.includes("://") ? urlStr : "http://" + urlStr);
-                } catch (e) {
-                    return { score: 20.0, flags: ["Malformed or invalid URL syntax."] };
-                }
-
-                const host = (parsed.hostname || "").toLowerCase();
-                const flags = [];
-                let score = 0.0;
-
-                // 1. Homograph Cyrillic/non-ASCII
-                if (host.includes("xn--") || [...host].some(c => c.charCodeAt(0) > 127)) {
-                    score += 70;
-                    flags.push("Homograph attack detected (non-ASCII character or Punycode domain spoofing).");
-                }
-
-                // 2. Raw IP
-                if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
-                    score += 65;
-                    flags.push(`Raw IP address hostname used (${host}) instead of legitimate domain.`);
-                }
-
-                // 3. Embedded credentials in authority
-                if (parsed.username || parsed.password) {
-                    score += 70;
-                    flags.push("URL contains embedded credentials/hostname spoofing via authority '@'.");
-                }
-
-                // 4. Typosquatting / combosquatting check
-                const parts = host.replace(/^www\./, "").split(".");
-                const mainDomain = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-                const tld = parts.length >= 2 ? parts[parts.length - 1] : "";
-                const tokens = mainDomain.split("-");
-
-                for (const brand of this.MONITORED_BRANDS) {
-                    for (const token of tokens) {
-                        if (token !== brand) {
-                            const norm = token.replace(/1/g, "l").replace(/0/g, "o").replace(/vv/g, "w").replace(/rn/g, "m");
-                            if (norm === brand) {
-                                score += 55;
-                                flags.push(`Deceptive typosquatting: Brand '${brand}' spoofed via character substitution in '${host}'.`);
-                                break;
-                            }
-                        }
-                    }
-                    if (mainDomain.includes(brand) && mainDomain !== brand) {
-                        if (this.HIGH_RISK_TLDS.includes(tld) || /(?:login|verify|update|account|security|billing|portal)/.test(mainDomain)) {
-                            score += 50;
-                            flags.push(`Combosquatting attack: Impersonating '${brand}' with suspicious keyword or TLD in '${host}'.`);
-                            break;
-                        }
-                    }
-                }
-
-                // 5. Insecure HTTP with credential keywords
-                if (parsed.protocol === "http:" && /(?:login|signin|verify|banking|password)/.test(parsed.pathname + parsed.search)) {
-                    score += 25;
-                    flags.push("Insecure HTTP protocol used for sensitive credential destination.");
-                }
-
-                return { score: Math.min(100, score), flags };
-            },
-
-            analyzeHeaders(headerStr) {
-                if (!headerStr || !headerStr.trim()) return { score: 0.0, flags: [] };
-                const lines = headerStr.split(/\r?\n/);
-                const headers = {};
-                for (const line of lines) {
-                    const idx = line.indexOf(":");
-                    if (idx > 0) {
-                        const k = line.substring(0, idx).trim().toLowerCase();
-                        const v = line.substring(idx + 1).trim();
-                        headers[k] = v;
-                    }
-                }
-
-                const flags = [];
-                let score = 0.0;
-
-                const fromVal = headers["from"] || "";
-                const returnPath = headers["return-path"] || "";
-                const authResults = headers["authentication-results"] || "";
-
-                // Display name spoofing
-                const nameMatch = fromVal.match(/"?([^"<]+)"?\s*<([^>]+)>/);
-                if (nameMatch) {
-                    const displayName = nameMatch[1].toLowerCase();
-                    const emailAddr = nameMatch[2].toLowerCase();
-                    const brand = this.MONITORED_BRANDS.find(b => displayName.includes(b));
-                    if (brand && !emailAddr.includes(brand)) {
-                        score += 45;
-                        flags.push(`Display name spoofing: Sender claims '${nameMatch[1]}' but address domain is '${emailAddr}'.`);
-                    }
-                }
-
-                // Return-Path mismatch
-                if (fromVal && returnPath) {
-                    const extractDomain = (str) => {
-                        const m = str.match(/@([a-zA-Z0-9.-]+)/);
-                        return m ? m[1].toLowerCase() : "";
-                    };
-                    const fromDomain = extractDomain(fromVal);
-                    const returnDomain = extractDomain(returnPath);
-                    if (fromDomain && returnDomain && fromDomain !== returnDomain && !fromDomain.endsWith("." + returnDomain) && !returnDomain.endsWith("." + fromDomain)) {
-                        score += 30;
-                        flags.push(`Header mismatch: 'From' domain (${fromDomain}) does not match 'Return-Path' domain (${returnDomain}).`);
-                    }
-                }
-
-                // SPF / DKIM / DMARC Failures
-                if (authResults) {
-                    const authLower = authResults.toLowerCase();
-                    if (authLower.includes("spf=fail")) {
-                        score += 25;
-                        flags.push("SPF authentication verification failed (spf=fail).");
-                    }
-                    if (authLower.includes("dkim=fail")) {
-                        score += 25;
-                        flags.push("DKIM cryptographic signature verification failed (dkim=fail).");
-                    }
-                    if (authLower.includes("dmarc=fail")) {
-                        score += 30;
-                        flags.push("DMARC alignment policy check failed (dmarc=fail).");
-                    }
-                }
-
-                return { score: Math.min(100, score), flags };
-            },
-
-            calculateRisk(nlpRes, urlRes, headerRes) {
-                const scores = [];
-                const weights = [];
-
-                if (nlpRes && nlpRes.score !== undefined) {
-                    scores.push(nlpRes.score);
-                    weights.push(0.40);
-                }
-                if (urlRes && urlRes.score !== undefined) {
-                    scores.push(urlRes.score);
-                    weights.push(0.35);
-                }
-                if (headerRes && headerRes.score !== undefined) {
-                    scores.push(headerRes.score);
-                    weights.push(0.25);
-                }
-
-                const totalWeight = weights.reduce((a, b) => a + b, 0);
-                let composite = 0;
-                if (totalWeight > 0) {
-                    composite = scores.reduce((sum, s, i) => sum + s * (weights[i] / totalWeight), 0);
-                }
-                composite = Math.round(Math.min(100, Math.max(0, composite)) * 10) / 10;
-
-                let riskLevel = "SAFE";
-                let badgeColor = "green";
-                let verdict = "Low risk detected. Content appears legitimate.";
-
-                if (composite < 25) {
-                    riskLevel = "SAFE";
-                    badgeColor = "green";
-                    verdict = "Low risk detected. Content appears legitimate.";
-                } else if (composite < 50) {
-                    riskLevel = "LOW RISK";
-                    badgeColor = "yellow";
-                    verdict = "Minor risk factors detected. Exercise standard caution.";
-                } else if (composite < 75) {
-                    riskLevel = "MEDIUM RISK";
-                    badgeColor = "orange";
-                    verdict = "Multiple suspicious indicators found. Likely phishing or social engineering.";
-                } else {
-                    riskLevel = "HIGH / CRITICAL RISK";
-                    badgeColor = "red";
-                    verdict = "CRITICAL PHISHING THREAT! Highly deceptive indicators detected. Do not click links or enter credentials.";
-                }
-
-                const allFlags = [
-                    ...(nlpRes ? nlpRes.flags : []),
-                    ...(urlRes ? urlRes.flags : []),
-                    ...(headerRes ? headerRes.flags : [])
-                ];
-
-                return {
-                    risk_score: composite,
-                    risk_level: riskLevel,
-                    badge_color: badgeColor,
-                    verdict: verdict,
-                    flags: allFlags,
-                    mode: "Standalone Local Client Engine"
-                };
-            }
-        };
-
-        // Determine API server base
-        let apiBase = window.location.protocol === 'file:' ? 'http://127.0.0.1:8000' : '';
-        let isServerOnline = false;
-
-        // Auto-adapt navigation links for local file vs server mode
-        function setupNavigation() {
-            const isFile = window.location.protocol === 'file:';
-            const testLabLink = document.getElementById('nav-test-lab');
-            if (testLabLink) {
-                testLabLink.href = isFile ? 'test_lab.html' : '/test-lab';
-            }
-        }
-
-        // Query AI model status on load
-        async function checkAiStatus() {
-            setupNavigation();
-            const badge = document.getElementById('ai-model-badge');
-            const dot = document.getElementById('ai-status-dot');
-            const text = document.getElementById('ai-model-text');
-
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1200);
-
-                const res = await fetch(`${apiBase}/api/health`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (res.ok) {
-                    const data = await res.json();
-                    isServerOnline = true;
-                    badge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-                    dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2";
-                    text.innerText = "Laya System-1 Model Active (Backend Online)";
-                    return;
-                }
-            } catch (e) {
-                // Server offline or file:// origin
-            }
-
-            // Fallback to Standalone Local Client Mode
-            isServerOnline = false;
-            badge.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20";
-            dot.className = "w-2 h-2 rounded-full bg-cyan-400 mr-2";
-            text.innerText = "Standalone Local Engine (No Server Required)";
-        }
-
-        window.addEventListener('DOMContentLoaded', checkAiStatus);
-
-        function loadSample(key) {
-            const data = samples[key];
-            if (data) {
-                document.getElementById('input-text').value = data.text;
-                document.getElementById('input-url').value = data.url;
-                document.getElementById('input-header').value = data.header;
-            }
-        }
-
-        async function submitAnalysis(e) {
-            e.preventDefault();
-
-            const text = document.getElementById('input-text').value;
-            const url = document.getElementById('input-url').value;
-            const header = document.getElementById('input-header').value;
-
-            if (!text && !url && !header) {
-                alert("Please provide at least one input (text, URL, or header).");
-                return;
-            }
-
-            // Show loading state
-            document.getElementById('initial-state').classList.add('hidden');
-            document.getElementById('analysis-output').classList.add('hidden');
-            document.getElementById('loading-state').classList.remove('hidden');
-            document.getElementById('loading-state').classList.add('flex');
-
-            try {
-                let analysisResult = null;
-
-                // 1. Try querying backend server if reachable
-                if (isServerOnline || window.location.protocol !== 'file:') {
-                    try {
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 2000);
-
-                        const response = await fetch(`${apiBase}/api/analyze`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text, url, headers: header }),
-                            signal: controller.signal
-                        });
-                        clearTimeout(timeoutId);
-
-                        if (response.ok) {
-                            analysisResult = await response.json();
-                        }
-                    } catch (netErr) {
-                        console.warn("[PhishShield] Backend unavailable, running client-side engine:", netErr);
-                    }
-                }
-
-                // 2. Client-side fallback threat engine (runs 100% offline in browser)
-                if (!analysisResult) {
-                    const nlpRes = ClientThreatEngine.analyzeText(text);
-                    const urlRes = ClientThreatEngine.analyzeUrl(url);
-                    const headerRes = ClientThreatEngine.analyzeHeaders(header);
-                    analysisResult = ClientThreatEngine.calculateRisk(nlpRes, urlRes, headerRes);
-                }
-
-                renderResults(analysisResult);
-
-            } catch (err) {
-                alert("Threat analysis error: " + err.message);
-            } finally {
-                document.getElementById('loading-state').classList.remove('flex');
-                document.getElementById('loading-state').classList.add('hidden');
-            }
-        }
-
-        function renderResults(data) {
-            document.getElementById('analysis-output').classList.remove('hidden');
-
-            const score = data.risk_score;
-            const level = data.risk_level;
-            const color = data.badge_color;
-            const verdict = data.verdict;
-            const flags = data.flags || [];
-
-            // Score text & color
-            const scoreEl = document.getElementById('out-score');
-            scoreEl.innerText = score + '%';
-
-            const ringEl = document.getElementById('score-ring');
-            const badgeEl = document.getElementById('out-badge');
-            
-            // Reset styles
-            ringEl.className = "relative w-36 h-36 rounded-full flex items-center justify-center border-4 bg-cyber-900/80 mb-3 transition-all duration-500 ";
-            badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider border ";
-
-            if (color === 'red') {
-                ringEl.classList.add('border-red-500', 'text-red-400', 'glow-red');
-                badgeEl.classList.add('bg-red-500/20', 'text-red-400', 'border-red-500/40');
-            } else if (color === 'orange') {
-                ringEl.classList.add('border-orange-500', 'text-orange-400', 'glow-yellow');
-                badgeEl.classList.add('bg-orange-500/20', 'text-orange-400', 'border-orange-500/40');
-            } else if (color === 'yellow') {
-                ringEl.classList.add('border-amber-400', 'text-amber-300', 'glow-yellow');
-                badgeEl.classList.add('bg-amber-400/20', 'text-amber-300', 'border-amber-400/40');
-            } else {
-                ringEl.classList.add('border-emerald-500', 'text-emerald-400', 'glow-green');
-                badgeEl.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
-            }
-
-            badgeEl.innerText = level;
-            document.getElementById('out-verdict').innerText = verdict;
-            document.getElementById('flag-count').innerText = flags.length + " flags detected";
-
-            // Render Flags list
-            const flagsContainer = document.getElementById('out-flags');
-            flagsContainer.innerHTML = '';
-
-            if (flags.length === 0) {
-                flagsContainer.innerHTML = `
-                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
-                        <i class="fa-solid fa-shield-check text-sm"></i>
-                        <span>No suspicious phishing patterns found across analyzed vectors.</span>
-                    </div>
-                `;
-            } else {
-                flags.forEach(flag => {
-                    const flagDiv = document.createElement('div');
-                    flagDiv.className = 'p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs text-slate-200 flex items-start gap-2.5';
-                    flagDiv.innerHTML = `
-                        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm mt-0.5 shrink-0"></i>
-                        <span>${flag}</span>
-                    `;
-                    flagsContainer.appendChild(flagDiv);
-                });
-            }
-        }
-    </script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
