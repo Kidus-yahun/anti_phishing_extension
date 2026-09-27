@@ -4,6 +4,7 @@
 
 [![CI Tests](https://github.com/Kidus-yahun/anti_phishing_extension/actions/workflows/ci.yml/badge.svg)](https://github.com/Kidus-yahun/anti_phishing_extension/actions)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 ![Laya AI](https://img.shields.io/badge/Laya_AI-System--1_Decision_Engine-8B5CF6)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green)
 ![Chrome Extension](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-red)
@@ -124,5 +125,29 @@ python -m pytest tests/test_detection.py
 
 ---
 
+## ❤️ Support this project
+
+PhishShield AI is free and will always keep its core protection free. You can fund its development:
+
+- **GitHub Sponsors** — click the **Sponsor** button at the top of this page
+- **Grants** — see [docs/GRANT_ONEPAGER.md](docs/GRANT_ONEPAGER.md) for our funding roadmap
+- **Contributions** — code, translations (especially **Amharic/Oromo threat-phrase data**), and false-positive reports are all welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
+
+---
+
+## 📄 Project documents
+
+| Document | Purpose |
+| --- | --- |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to set up, test, and submit PRs |
+| [PRIVACY_POLICY.md](PRIVACY_POLICY.md) | Exactly what data is (and is not) collected |
+| [SECURITY.md](SECURITY.md) | Vulnerability disclosure policy |
+| [docs/GRANT_ONEPAGER.md](docs/GRANT_ONEPAGER.md) | One-page overview for funders |
+
+---
+
 ## 🛡️ License & Educational Disclaimer
+
+This project is released under the **GNU Affero General Public License v3.0** — see [LICENSE](LICENSE). In short: you are free to use, study, share, and modify it; derivative works must remain open source, including when offered as a network service (AGPL §13).
+
 This project is developed for educational, defensive cybersecurity, threat intelligence research, and security awareness training purposes.

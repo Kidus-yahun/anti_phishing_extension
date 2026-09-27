@@ -1,0 +1,6 @@
+# GitHub Sponsors button config
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+github: Kidus-yahun
+# Uncomment and fill in once your account exists:
+# custom: ["https://ko-fi.com/YOUR_HANDLE", "https://opencollective.com/YOUR_COLLECTIVE"]
+custom: ["https://github.com/Kidus-yahun/anti_phishing_extension"]
