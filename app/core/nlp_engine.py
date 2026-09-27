@@ -267,3 +267,159 @@ class NLPEngine:
             "model_used": model_used,
             "heuristic_score": round(heuristic_score, 1)
         }
+
+    def evaluate_url(self, url: str, anchor_text: str = "") -> Dict:
+        """
+        Evaluate a URL autonomously using the Laya System-1 Model.
+        Eliminates the need for fragile hardcoded domain whitelists or crude
+        string edit-distance heuristics that falsely flag legitimate websites.
+        """
+        if not url:
+            return {"is_phishing": False, "score": 0.0, "confidence": 0.0, "flags": [], "reason": ""}
+
+        # Cache lookup for sub-millisecond repeated queries
+        cache_key = (url.strip().lower(), (anchor_text or "").strip().lower())
+        if not hasattr(self, "_url_cache"):
+            self._url_cache = {}
+        if cache_key in self._url_cache:
+            return self._url_cache[cache_key]
+
+        # 1. Structural Checks (Invariable cryptographic / protocol attacks)
+        from urllib.parse import urlparse
+        parsed = urlparse(url if "://" in url else "http://" + url)
+        host = (parsed.hostname or "").lower()
+        flags = []
+
+        # Non-ASCII / Cyrillic Punycode homograph attack
+        if "xn--" in host or any(ord(c) > 127 for c in host):
+            res = {
+                "is_phishing": True,
+                "score": 85.0,
+                "confidence": 0.95,
+                "flags": ["Homograph attack detected (non-ASCII character or Punycode domain spoofing)."],
+                "reason": "Homograph attack: Non-ASCII characters used to disguise domain.",
+                "model_used": "Structural Guardrail"
+            }
+            self._url_cache[cache_key] = res
+            return res
+
+        # Raw IP address hostname
+        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+            res = {
+                "is_phishing": True,
+                "score": 80.0,
+                "confidence": 0.90,
+                "flags": [f"Raw IP address hostname used ({host})."],
+                "reason": "Deceptive destination using raw IP address instead of registered domain.",
+                "model_used": "Structural Guardrail"
+            }
+            self._url_cache[cache_key] = res
+            return res
+
+        # Embedded authority credentials (user:pass@host)
+        if parsed.username or parsed.password:
+            res = {
+                "is_phishing": True,
+                "score": 85.0,
+                "confidence": 0.90,
+                "flags": ["URL contains embedded authority credentials spoofing hostname."],
+                "reason": "Credential spoofing via authority '@' syntax.",
+                "model_used": "Structural Guardrail"
+            }
+            self._url_cache[cache_key] = res
+            return res
+
+        # Deceptive anchor text mismatch (e.g. text claims google.com but href goes to attacker.com)
+        if anchor_text:
+            text_clean = anchor_text.strip().lower()
+            m = re.search(r"(?:https?://)?(?:www\.)?([a-z0-9.-]+\.[a-z]{2,})", text_clean)
+            if m:
+                displayed_domain = m.group(1).replace("www.", "")
+                actual_host = re.sub(r"^www\.", "", host)
+                if displayed_domain and actual_host and displayed_domain != actual_host and not actual_host.endswith("." + displayed_domain):
+                    res = {
+                        "is_phishing": True,
+                        "score": 80.0,
+                        "confidence": 0.90,
+                        "flags": [f"Deceptive link: Display text claims '{displayed_domain}' but link points to '{actual_host}'."],
+                        "reason": f"Deceptive link mismatch: Claiming '{displayed_domain}' while directing to '{actual_host}'.",
+                        "model_used": "Anchor Mismatch Guardrail"
+                    }
+                    self._url_cache[cache_key] = res
+                    return res
+
+        # 2. Deceptive typosquatting / combosquatting check
+        from app.core.url_analyzer import URLAnalyzer
+        is_typo, typo_msg, typo_weight = URLAnalyzer.check_typosquatting(host)
+        if is_typo:
+            res = {
+                "is_phishing": True,
+                "score": 80.0,
+                "confidence": 0.88,
+                "flags": [typo_msg],
+                "reason": typo_msg,
+                "model_used": "Typosquatting Guardrail"
+            }
+            self._url_cache[cache_key] = res
+            return res
+
+        # 3. Laya System-1 Autonomous Model Decision
+        if self._laya_ready and self._laya_agent:
+            try:
+                url_context = f"URL: {url}"
+                if anchor_text and len(anchor_text.strip()) > 1:
+                    url_context += f" | Display Text: {anchor_text.strip()[:100]}"
+
+                url_triage_question = {
+                    "verdict": {
+                        "type": "choice",
+                        "instructions": "Is this link URL a phishing/scam attack or a legitimate website?",
+                        "criteria": {
+                            "phishing_scam": "deceptive domain, combosquatting, fake brand clone, or credential harvester",
+                            "legitimate_site": "authentic website, company, publisher, portfolio, or safe service"
+                        }
+                    }
+                }
+
+                result = self._laya_agent.decide(url_context, questions=url_triage_question)
+                verdict = result.get("verdict", {})
+                choice = verdict.get("choice")
+                probs = verdict.get("probabilities", {})
+                phish_prob = float(probs.get("phishing_scam", 0.0))
+
+                # True phishing determination requires clear model confidence
+                is_phish = (choice == "phishing_scam" and phish_prob >= 0.65)
+                score = round(phish_prob * 100.0, 1) if is_phish else 0.0
+
+                if is_phish:
+                    flags.append(
+                        f"Laya System-1 Model identified deceptive phishing domain ({round(phish_prob * 100, 1)}% confidence)."
+                    )
+                    reason = f"Laya System-1 Model flagged link as deceptive phishing clone ({round(phish_prob * 100, 1)}% confidence)."
+                else:
+                    reason = "Laya System-1 Model verified link destination as legitimate."
+
+                res = {
+                    "is_phishing": is_phish,
+                    "score": score,
+                    "confidence": round(phish_prob, 4),
+                    "flags": flags,
+                    "reason": reason,
+                    "model_used": f"Laya-System1 ({self.laya_model_name})"
+                }
+                self._url_cache[cache_key] = res
+                return res
+            except Exception as e:
+                print(f"[NLPEngine] Error evaluating URL with Laya: {e}")
+
+        # Safe default if model is offline and no structural attack detected
+        res = {
+            "is_phishing": False,
+            "score": 0.0,
+            "confidence": 0.0,
+            "flags": [],
+            "reason": "No structural threat detected (Model initializing)",
+            "model_used": "Baseline"
+        }
+        self._url_cache[cache_key] = res
+        return res

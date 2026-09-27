@@ -168,7 +168,7 @@
   }
 
   /**
-   * Evaluate a single anchor element
+   * Evaluate a single anchor element using client structural checks and Laya AI Model
    */
   function inspectLink(link) {
     if (!isProtectionActive) return;
@@ -180,17 +180,63 @@
 
     const evaluation = window.PhishShieldHeuristics.evaluateLinkSafety(link, link.href || rawHref);
 
+    // 1. If definitive structural attack (homograph, IP, explicit anchor spoof), flag immediately
     if (evaluation.isPhishing) {
-      flaggedThreats.push({
-        element: link,
-        url: evaluation.url,
-        host: evaluation.host,
-        flags: evaluation.flags,
-        riskScore: evaluation.riskScore
-      });
-
-      applyThreatUI(link, evaluation);
+      applyFlaggedThreat(link, evaluation);
+      return;
     }
+
+    // 2. Query Laya AI Decision Model asynchronously for external links
+    try {
+      const targetUrl = link.href || rawHref;
+      if (!targetUrl || targetUrl.startsWith("#") || targetUrl.startsWith("javascript:") || targetUrl.startsWith("mailto:")) return;
+
+      const linkHost = new URL(targetUrl, window.location.href).hostname || "";
+      const currentHost = window.location.hostname || "";
+      if (window.PhishShieldHeuristics.isSameSiteOrSubdomain(linkHost, currentHost)) {
+        return; // Internal navigation is always safe
+      }
+
+      // Query Laya System-1 Model via background service worker
+      chrome.runtime.sendMessage({
+        type: "VERIFY_LINK_WITH_MODEL",
+        url: targetUrl,
+        text: (link.innerText || link.textContent || "").trim()
+      }, (response) => {
+        if (chrome.runtime.lastError || !response || !response.success || !response.data) {
+          return;
+        }
+
+        const modelRes = response.data;
+        if (modelRes.is_phishing && isProtectionActive && !interceptedLinks.has(link)) {
+          const modelEval = {
+            url: targetUrl,
+            host: linkHost,
+            riskScore: modelRes.score || 80,
+            flags: modelRes.flags && modelRes.flags.length > 0 ? modelRes.flags : [modelRes.reason]
+          };
+          applyFlaggedThreat(link, modelEval);
+        }
+      });
+    } catch (e) {
+      // Ignored
+    }
+  }
+
+  function applyFlaggedThreat(link, evaluation) {
+    if (!isProtectionActive || interceptedLinks.has(link)) return;
+
+    flaggedThreats.push({
+      element: link,
+      url: evaluation.url,
+      host: evaluation.host,
+      flags: evaluation.flags,
+      riskScore: evaluation.riskScore
+    });
+
+    applyThreatUI(link, evaluation);
+    updatePill();
+    notifyServiceWorker(flaggedThreats.length);
   }
 
   /**

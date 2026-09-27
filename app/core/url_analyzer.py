@@ -134,22 +134,30 @@ class URLAnalyzer:
         sub_tokens = main_domain.split("-")
 
         for brand in POPULAR_BRANDS:
-            # 1. Combosquatting: brand name embedded in compound domain
-            if brand in main_domain:
-                if main_domain != brand:
-                    found_lure = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in main_domain]
-                    is_bad_tld = tld in SUSPICIOUS_TLDS
-                    if found_lure or is_bad_tld or "-" in main_domain:
-                        lure_label = found_lure[0] if found_lure else (f".{tld}" if is_bad_tld else "compound name")
-                        return True, f"Suspicious combosquatting: Brand '{brand}' paired with '{lure_label}' in '{host}'", 35.0
-                elif tld in SUSPICIOUS_TLDS:
-                    return True, f"High-risk domain spoofing: Brand '{brand}' registered under .{tld}", 35.0
+            # 1. Combosquatting: brand name embedded in compound domain paired with lure keyword or high-risk TLD
+            if brand in main_domain and main_domain != brand:
+                found_lure = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in main_domain]
+                is_bad_tld = tld in SUSPICIOUS_TLDS
+                if found_lure or is_bad_tld:
+                    lure_label = found_lure[0] if found_lure else f".{tld}"
+                    return True, f"Suspicious combosquatting: Brand '{brand}' paired with '{lure_label}' in '{host}'", 35.0
 
-            # 2. True typosquatting: Levenshtein distance 1 or 2 on sub-tokens (e.g. paypa1, micros0ft, g00gle)
+            # 2. Deceptive character substitution (e.g. paypa1, micros0ft, g00gle)
             for token in sub_tokens:
-                dist = levenshtein_distance(token, brand)
-                if 0 < dist <= 2 and len(token) >= 4:
-                    return True, f"Possible typosquatting of brand '{brand}' (detected: '{token}' in '{host}')", 40.0
+                if token != brand and len(token) >= 4:
+                    normalized = (
+                        token.replace("1", "l")
+                        .replace("0", "o")
+                        .replace("vv", "w")
+                        .replace("rn", "m")
+                    )
+                    if normalized == brand:
+                        return True, f"Possible typosquatting of brand '{brand}' (detected: '{token}' in '{host}')", 40.0
+
+                    # Single edit distance only if token explicitly targets brand prefix
+                    dist = levenshtein_distance(token, brand)
+                    if dist == 1 and abs(len(token) - len(brand)) <= 1 and token.startswith(brand[:3]):
+                        return True, f"Possible typosquatting of brand '{brand}' (detected: '{token}' in '{host}')", 40.0
 
         return False, "", 0.0
 

@@ -1,82 +1,25 @@
 /**
- * PhishShield AI - High-Precision Link Heuristics Engine
- * Eliminates false positives on major platforms (YouTube, Google, GitHub, etc.)
- * while maintaining strict detection for genuine phishing attacks.
+ * PhishShield AI - Autonomous Link Heuristics Engine
+ * Eliminates fragile hardcoded domain lists and avoids false positives on legitimate websites
+ * by targeting objective structural deception and delegating dynamic analysis to the Laya System-1 Model.
  */
 
-// 1. Authenticated Major Global Domains (Never false-flag authentic domains)
-const TRUSTED_DOMAINS = new Set([
-  // Google / Alphabet
-  "google.com", "youtube.com", "youtu.be", "ytimg.com", "ggpht.com", "googlevideo.com",
-  "gmail.com", "googleapis.com", "gstatic.com", "googletagmanager.com", "googleusercontent.com",
-  "google-analytics.com", "android.com", "chrome.com",
-
-  // GitHub & Developer Ecosystem
-  "github.com", "github.io", "githubstatus.com", "githubassets.com", "githubusercontent.com",
-  "github.community", "github.dev", "gh.io", "gitlab.com", "bitbucket.org",
-  "stackoverflow.com", "stackexchange.com", "npmjs.com", "pypi.org", "python.org",
-  "mozilla.org", "w3.org",
-
-  // Microsoft
-  "microsoft.com", "live.com", "office.com", "office365.com", "outlook.com", "bing.com",
-  "microsoftonline.com", "microsoftteams.com", "azure.com", "visualstudio.com",
-  "windows.com", "msn.com", "skype.com", "xbox.com", "azureedge.net",
-
-  // Apple
-  "apple.com", "icloud.com", "appleid.apple.com", "itunes.com", "cdn-apple.com",
-
-  // Amazon
-  "amazon.com", "aws.amazon.com", "amazonaws.com", "amazonpay.com", "media-amazon.com", "primevideo.com",
-
-  // Meta
-  "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "meta.com", "messenger.com", "fbcdn.net",
-
-  // Social & Media
-  "twitter.com", "x.com", "t.co", "twimg.com", "linkedin.com", "licdn.com",
-  "reddit.com", "redditstatic.com", "netflix.com", "nflxext.com", "spotify.com", "scdn.co",
-  "twitch.tv", "discord.com", "discord.gg", "discordapp.com", "discordstatus.com",
-  "telegram.org", "t.me",
-
-  // Security, Infrastructure & Services
-  "steamcommunity.com", "steampowered.com", "steamstatic.com",
-  "cloudflare.com", "cloudflarestatus.com", "statuspage.io",
-  "openai.com", "chatgpt.com", "wikipedia.org", "wikimedia.org", "medium.com"
-]);
-
-// 2. High-value brands targeted by phishers
-const POPULAR_BRANDS = [
+// Target popular high-value brands commonly imitated in phishing attacks
+const MONITORED_BRANDS = [
   "paypal", "google", "microsoft", "apple", "amazon", "facebook",
   "netflix", "bankofamerica", "chase", "wellsfargo", "github",
-  "linkedin", "dropbox", "binance", "coinbase", "instagram",
-  "twitter", "discord", "steam", "whatsapp", "telegram"
+  "linkedin", "dropbox", "binance", "coinbase", "instagram"
 ];
 
 // Phishing action lures commonly used in combosquatting attacks
-const PHISHING_COMBO_KEYWORDS = [
+const PHISHING_COMBO_LURES = [
   "login", "signin", "verify", "verification", "auth", "security",
-  "account", "update", "billing", "support", "secure", "confirm",
-  "wallet", "password", "session", "recover", "helpdesk", "portal"
+  "account", "update", "billing", "support", "password", "portal"
 ];
 
-const SUSPICIOUS_TLDS = new Set([
-  "top", "xyz", "club", "work", "click", "zip", "mov", "country",
-  "kim", "science", "gq", "cf", "tk", "ml", "ga"
+const HIGH_RISK_TLDS = new Set([
+  "top", "xyz", "club", "work", "click", "zip", "mov", "gq", "cf", "tk", "ml", "ga"
 ]);
-
-/**
- * Check if a host belongs to a verified trusted domain
- */
-function isTrustedDomain(host) {
-  if (!host) return false;
-  const clean = host.toLowerCase().replace(/^www\./, "");
-  if (TRUSTED_DOMAINS.has(clean)) return true;
-  for (const trusted of TRUSTED_DOMAINS) {
-    if (clean === trusted || clean.endsWith("." + trusted)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /**
  * Check if the link target belongs to the current website (first-party navigation)
@@ -103,79 +46,55 @@ function hasHomographAttack(host) {
 }
 
 /**
- * Levenshtein Distance
+ * Check for intentional visual typosquatting substitutions (e.g. 1->l, 0->o, vv->w)
+ * without erroneously flagging innocent English words (e.g. stream, apply, base, team).
  */
-function levenshteinDistance(s1, s2) {
-  if (s1.length < s2.length) return levenshteinDistance(s2, s1);
-  if (s2.length === 0) return s1.length;
-  let prev = Array.from({ length: s2.length + 1 }, (_, i) => i);
-  for (let i = 0; i < s1.length; i++) {
-    const curr = [i + 1];
-    for (let j = 0; j < s2.length; j++) {
-      const cost = s1[i] === s2[j] ? 0 : 1;
-      curr.push(Math.min(curr[j] + 1, prev[j + 1] + 1, prev[j] + cost));
-    }
-    prev = curr;
-  }
-  return prev[s2.length];
-}
-
-/**
- * Check for deceptive brand typosquatting or combosquatting
- */
-function checkTyposquatting(host) {
-  if (!host) return { isTypo: false, reason: "", weight: 0 };
-
-  // Never flag verified trusted ecosystem domains
-  if (isTrustedDomain(host)) {
-    return { isTypo: false, reason: "", weight: 0 };
-  }
+function checkDeceptiveTyposquatting(host) {
+  if (!host) return { isTypo: false, reason: "", score: 0 };
 
   const cleanHost = host.toLowerCase().replace(/^www\./, "");
   const parts = cleanHost.split(".");
-  // Inspect registered domain label (e.g. 'paypa1' from 'paypa1-security.com')
   const mainDomain = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
   const tld = parts.length >= 2 ? parts[parts.length - 1] : "";
-
   const tokens = mainDomain.split("-");
 
-  for (const brand of POPULAR_BRANDS) {
-    // 1. Combosquatting: brand name embedded in compound domain
-    if (mainDomain.includes(brand)) {
-      if (mainDomain !== brand) {
-        const foundLure = PHISHING_COMBO_KEYWORDS.find(kw => mainDomain.includes(kw));
-        const isBadTld = SUSPICIOUS_TLDS.has(tld);
-        if (foundLure || isBadTld || mainDomain.includes("-")) {
-          const lureLabel = foundLure || (isBadTld ? `.${tld}` : "compound name");
+  for (const brand of MONITORED_BRANDS) {
+    // 1. Intentional Character/Digit Substitution (e.g. paypa1, micros0ft, g00gle)
+    for (const token of tokens) {
+      if (token !== brand) {
+        const normalized = token
+          .replace(/1/g, "l")
+          .replace(/0/g, "o")
+          .replace(/vv/g, "w")
+          .replace(/rn/g, "m");
+
+        if (normalized === brand && token !== brand) {
           return {
             isTypo: true,
-            reason: `Suspicious combosquatting: Brand '${brand}' paired with '${lureLabel}' in '${host}'`,
-            weight: 35
+            reason: `Deceptive typosquatting: Brand '${brand}' spoofed using character substitution in '${host}'`,
+            score: 75
           };
         }
-      } else if (SUSPICIOUS_TLDS.has(tld)) {
-        return {
-          isTypo: true,
-          reason: `High-risk domain spoofing: Brand '${brand}' registered under .${tld}`,
-          weight: 35
-        };
       }
     }
 
-    // 2. True typosquatting: Levenshtein distance 1 or 2 on sub-tokens (e.g. paypa1, micros0ft, g00gle)
-    for (const token of tokens) {
-      const dist = levenshteinDistance(token, brand);
-      if (dist > 0 && dist <= 2 && token.length >= 4) {
+    // 2. High-Risk Combosquatting (Brand + Phishing Lure Keyword e.g. chase-security-update.top)
+    if (mainDomain.includes(brand) && mainDomain !== brand) {
+      const foundLure = PHISHING_COMBO_LURES.find((kw) => mainDomain.includes(kw));
+      const isBadTld = HIGH_RISK_TLDS.has(tld);
+
+      if (foundLure || isBadTld) {
+        const lureDesc = foundLure ? `'${foundLure}' lure` : `.${tld} TLD`;
         return {
           isTypo: true,
-          reason: `Possible typosquatting of brand '${brand}' (detected: '${token}' in '${host}')`,
-          weight: 45
+          reason: `Combosquatting attack: Impersonating '${brand}' paired with ${lureDesc} in '${host}'`,
+          score: 70
         };
       }
     }
   }
 
-  return { isTypo: false, reason: "", weight: 0 };
+  return { isTypo: false, reason: "", score: 0 };
 }
 
 /**
@@ -188,7 +107,7 @@ function checkAnchorTextMismatch(anchorText, parsedUrl, currentHost) {
 
   const text = anchorText.trim().toLowerCase();
 
-  // MUST look like an explicit URL (e.g. starts with http://, https://, www. or is a domain)
+  // MUST look like an explicit URL / domain claim
   const isExplicitUrl =
     text.startsWith("http://") ||
     text.startsWith("https://") ||
@@ -196,18 +115,15 @@ function checkAnchorTextMismatch(anchorText, parsedUrl, currentHost) {
     /^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(text);
 
   if (!isExplicitUrl) {
-    // Normal video titles like "Learn Node.js in 100s" or "Claude.ai vs ChatGPT" are NOT anchor spoofs
     return { isMismatch: false, reason: "" };
   }
 
-  // Extract domain from anchor text
   const match = text.match(/(?:https?:\/\/)?(?:www\.)?([a-z0-9.-]+\.[a-z]{2,})/i);
   if (!match) return { isMismatch: false, reason: "" };
 
   const displayedDomain = match[1].toLowerCase().replace(/^www\./, "");
   const actualHost = parsedUrl.hostname ? parsedUrl.hostname.toLowerCase().replace(/^www\./, "") : "";
 
-  // If the target is the current site, it's not a phishing deception
   if (isSameSiteOrSubdomain(actualHost, currentHost)) {
     return { isMismatch: false, reason: "" };
   }
@@ -227,7 +143,8 @@ function isIpAddress(host) {
 }
 
 /**
- * High-Precision Link Safety Evaluation
+ * Fast Client-Side Link Inspection
+ * Identifies unambiguous structural deception immediately, without false-flagging legitimate sites.
  */
 function evaluateLinkSafety(anchorEl, rawHref) {
   if (!rawHref || rawHref.startsWith("javascript:") || rawHref.startsWith("#") || rawHref.startsWith("mailto:")) {
@@ -243,69 +160,48 @@ function evaluateLinkSafety(anchorEl, rawHref) {
 
   const host = parsedUrl.hostname || "";
   const currentHost = window.location.hostname || "";
-  const scheme = parsedUrl.protocol.replace(":", "").toLowerCase();
   const flags = [];
   let score = 0;
 
-  // 1. Check Homograph Attack FIRST (Cyrillic spoofing)
-  const isHomograph = hasHomographAttack(host);
-  if (isHomograph) {
-    score += 60;
-    flags.push("Homograph attack detected (non-ASCII / Cyrillic character spoofing)");
+  // 1. Same-site / internal navigation is ALWAYS safe
+  if (isSameSiteOrSubdomain(host, currentHost)) {
+    return { isPhishing: false, riskScore: 0, host, url: parsedUrl.href, flags: [] };
   }
 
-  // 2. Safe Whitelist Checks (Trusted Global Domains & Same-Site Navigation)
-  // If NOT a homograph attack, and belongs to a trusted domain or current site, it is SAFE.
-  if (!isHomograph) {
-    if (isTrustedDomain(host) || isSameSiteOrSubdomain(host, currentHost)) {
-      return { isPhishing: false, riskScore: 0, host, url: parsedUrl.href, flags: [] };
-    }
+  // 2. Homograph / Cyrillic Punycode Spoofing
+  if (hasHomographAttack(host)) {
+    score += 80;
+    flags.push("Homograph attack detected (non-ASCII character or Punycode domain spoofing)");
   }
 
-  // 3. Typosquatting / Combosquatting Check
-  const typoResult = checkTyposquatting(host);
-  if (typoResult.isTypo) {
-    score += typoResult.weight || 40;
-    flags.push(typoResult.reason);
-  }
-
-  // 4. Anchor Text vs Actual Destination Mismatch
-  const anchorText = anchorEl ? anchorEl.innerText || anchorEl.textContent || "" : "";
-  const mismatchResult = checkAnchorTextMismatch(anchorText, parsedUrl, currentHost);
-  if (mismatchResult.isMismatch) {
-    score += 45;
-    flags.push(mismatchResult.reason);
-  }
-
-  // 5. Raw IP address hostname
+  // 3. Raw IP Address Hostname
   if (isIpAddress(host)) {
-    score += 40;
+    score += 75;
     flags.push(`Raw IP address hostname used (${host})`);
   }
 
-  // 6. Suspicious Credential Embedding via Authority '@'
-  // Only flags if '@' is in userinfo (before host), NOT in path like /@username
+  // 4. Embedded authority credentials (user:password@host)
   if (parsedUrl.username || parsedUrl.password) {
-    score += 45;
+    score += 80;
     flags.push("URL contains embedded credentials/hostname spoofing via authority '@'");
   }
 
-  // 7. Suspicious TLD
-  const tld = host.split(".").pop().toLowerCase();
-  if (SUSPICIOUS_TLDS.has(tld)) {
-    score += 30;
-    flags.push(`High-risk top-level domain (.${tld})`);
+  // 5. Deceptive Anchor Text Mismatch
+  const anchorText = anchorEl ? anchorEl.innerText || anchorEl.textContent || "" : "";
+  const mismatchResult = checkAnchorTextMismatch(anchorText, parsedUrl, currentHost);
+  if (mismatchResult.isMismatch) {
+    score += 75;
+    flags.push(mismatchResult.reason);
   }
 
-  // 8. Insecure HTTP for login or banking keywords
-  const pathAndQuery = (parsedUrl.pathname + parsedUrl.search).toLowerCase();
-  if (scheme === "http" && (pathAndQuery.includes("login") || pathAndQuery.includes("signin") || pathAndQuery.includes("verify") || pathAndQuery.includes("banking"))) {
-    score += 30;
-    flags.push("Insecure HTTP protocol used for sensitive login/banking destination");
+  // 6. Deceptive Typosquatting / Combosquatting
+  const typoResult = checkDeceptiveTyposquatting(host);
+  if (typoResult.isTypo) {
+    score += typoResult.score;
+    flags.push(typoResult.reason);
   }
 
-  // Requires high confidence (score >= 40)
-  const isPhishing = score >= 40 && flags.length > 0;
+  const isPhishing = score >= 60;
 
   return {
     isPhishing,
@@ -320,10 +216,10 @@ function evaluateLinkSafety(anchorEl, rawHref) {
 if (typeof window !== "undefined") {
   window.PhishShieldHeuristics = {
     evaluateLinkSafety,
-    checkTyposquatting,
     hasHomographAttack,
     checkAnchorTextMismatch,
     isIpAddress,
-    isTrustedDomain
+    isSameSiteOrSubdomain,
+    checkDeceptiveTyposquatting
   };
 }

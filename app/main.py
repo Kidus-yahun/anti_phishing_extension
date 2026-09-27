@@ -31,6 +31,11 @@ class AnalysisRequest(BaseModel):
     url: Optional[str] = ""
     headers: Optional[str] = ""
 
+class LinkVerificationRequest(BaseModel):
+    url: str
+    text: Optional[str] = ""
+    context: Optional[str] = ""
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard(request: Request):
     """Serve main cybersecurity web dashboard."""
@@ -73,4 +78,13 @@ async def analyze_threat(payload: AnalysisRequest):
         header_res=header_res
     )
 
+    return JSONResponse(content=result)
+
+@app.post("/api/verify-link")
+async def verify_link(payload: LinkVerificationRequest):
+    """
+    Sub-second autonomous link evaluation powered by Laya System-1 Model.
+    Dynamically identifies phishing vs legitimate sites without hardcoded whitelists.
+    """
+    result = nlp_engine.evaluate_url(payload.url, anchor_text=payload.text or "")
     return JSONResponse(content=result)

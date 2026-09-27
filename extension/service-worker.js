@@ -65,6 +65,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } catch (e) {
           sendResponse({ online: false, error: e.message });
         }
+      } else if (message.type === "VERIFY_LINK_WITH_MODEL") {
+        const { apiEndpoint = "http://127.0.0.1:8000" } = await chrome.storage.local.get("apiEndpoint");
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+          const res = await fetch(`${apiEndpoint}/api/verify-link`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              url: message.url || "",
+              text: message.text || "",
+              context: message.context || ""
+            }),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const data = await res.json();
+            sendResponse({ success: true, data });
+          } else {
+            sendResponse({ success: false, error: "HTTP " + res.status });
+          }
+        } catch (e) {
+          sendResponse({ success: false, error: e.message });
+        }
       }
     } catch (err) {
       console.error("[PhishShield AI] Service Worker Error:", err);

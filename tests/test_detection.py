@@ -103,3 +103,30 @@ def test_laya_model_integration():
     assert res["score"] >= 30.0
     assert "model_used" in res
 
+def test_legitimate_sites_no_false_positives():
+    """Verify arbitrary legitimate sites outside hardcoded whitelists are never falsely flagged."""
+    arbitrary_legit_sites = [
+        "https://streamable.com/video123",
+        "https://dribbble.com/shots/popular",
+        "https://nytimes.com/tech",
+        "https://addisfortune.news/business",
+        "https://apple.com/iphone"
+    ]
+    for url in arbitrary_legit_sites:
+        res = URLAnalyzer.analyze_url(url)
+        assert res["score"] <= 20.0, f"False positive score on {url}: {res['score']}"
+        assert not any("typosquatting" in f.lower() for f in res["flags"])
+
+def test_laya_evaluate_url():
+    """Verify autonomous Laya link verification."""
+    nlp = NLPEngine(model_path="app/models/phishing_model.pkl")
+    
+    # Test legitimate URL evaluation
+    legit_res = nlp.evaluate_url("https://dribbble.com/popular")
+    assert not legit_res["is_phishing"]
+
+    # Test obvious phishing URL evaluation
+    phish_res = nlp.evaluate_url("http://paypa1-security-verification.xyz/login.php")
+    assert phish_res["is_phishing"]
+    assert phish_res["score"] >= 60.0
+
