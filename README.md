@@ -20,8 +20,9 @@
 - **Floating Security Pill**: A clean, Grammarly-style corner pill showing the real-time security health of the active tab.
 
 ### 2. 🤖 AI/ML Social Engineering NLP Engine
-- Machine Learning classifier (`LogisticRegression` + `TF-IDF`) trained on phishing text data.
-- Urgency & coercion language analysis (identifying panic-inducing threats, credential harvesting requests, and authority impersonation).
+- **Primary (Model #1)**: **Laya System-1 Decision Engine** (`convaiinnovations/laya`) non-autoregressive ModernBERT model delivering sub-second (<500ms on CPU, ~35ms on GPU) multilingual semantic decisions with calibrated confidence.
+- **Fallback**: Machine Learning classifier (`LogisticRegression` + `TF-IDF`) for instant offline/cold-start fallback.
+- **Urgency & Coercion NLP Heuristics**: Analyzes panic-inducing threats, credential harvesting requests, and authority impersonation cues.
 
 ### 3. 🔍 Heuristic URL & Homograph Inspector
 - **IDN / Homograph Spoofing Detection**: Identifies Cyrillic/Unicode characters spoofing legitimate domains (e.g. `pаypal.com`).

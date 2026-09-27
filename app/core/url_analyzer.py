@@ -2,6 +2,45 @@ import re
 from urllib.parse import urlparse
 import unicodedata
 
+# Major trusted platform ecosystems (authentic domains and sub-services)
+TRUSTED_DOMAINS = {
+    # Google / Alphabet
+    "google.com", "youtube.com", "youtu.be", "ytimg.com", "ggpht.com", "googlevideo.com",
+    "gmail.com", "googleapis.com", "gstatic.com", "googletagmanager.com", "googleusercontent.com",
+    "google-analytics.com", "android.com", "chrome.com",
+
+    # GitHub & Developer Ecosystem
+    "github.com", "github.io", "githubstatus.com", "githubassets.com", "githubusercontent.com",
+    "github.community", "github.dev", "gh.io", "gitlab.com", "bitbucket.org",
+    "stackoverflow.com", "stackexchange.com", "npmjs.com", "pypi.org", "python.org",
+    "mozilla.org", "w3.org",
+
+    # Microsoft
+    "microsoft.com", "live.com", "office.com", "office365.com", "outlook.com", "bing.com",
+    "microsoftonline.com", "microsoftteams.com", "azure.com", "visualstudio.com",
+    "windows.com", "msn.com", "skype.com", "xbox.com", "azureedge.net",
+
+    # Apple
+    "apple.com", "icloud.com", "appleid.apple.com", "itunes.com", "cdn-apple.com",
+
+    # Amazon
+    "amazon.com", "aws.amazon.com", "amazonaws.com", "amazonpay.com", "media-amazon.com", "primevideo.com",
+
+    # Meta
+    "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "meta.com", "messenger.com", "fbcdn.net",
+
+    # Social & Media
+    "twitter.com", "x.com", "t.co", "twimg.com", "linkedin.com", "licdn.com",
+    "reddit.com", "redditstatic.com", "netflix.com", "nflxext.com", "spotify.com", "scdn.co",
+    "twitch.tv", "discord.com", "discord.gg", "discordapp.com", "discordstatus.com",
+    "telegram.org", "t.me",
+
+    # Security, Infrastructure & Services
+    "steamcommunity.com", "steampowered.com", "steamstatic.com",
+    "cloudflare.com", "cloudflarestatus.com", "statuspage.io",
+    "openai.com", "chatgpt.com", "wikipedia.org", "wikimedia.org", "medium.com"
+}
+
 # Target popular brands for typosquatting check
 POPULAR_BRANDS = [
     "paypal", "google", "microsoft", "apple", "amazon", "facebook", 
@@ -22,7 +61,7 @@ URL_SHORTENERS = {
 SUSPICIOUS_PATH_KEYWORDS = [
     "login", "signin", "verify", "verification", "secure", "security",
     "update", "account", "banking", "confirm", "credential", "billing",
-    "password", "wallet", "authenticate"
+    "password", "wallet", "authenticate", "auth", "portal"
 ]
 
 def levenshtein_distance(s1: str, s2: str) -> int:
@@ -45,6 +84,19 @@ def levenshtein_distance(s1: str, s2: str) -> int:
 
 class URLAnalyzer:
     """Heuristic and structural analyzer for detecting phishing URLs."""
+
+    @classmethod
+    def is_trusted_domain(cls, host: str) -> bool:
+        """Check if hostname belongs to an authenticated trusted ecosystem."""
+        if not host:
+            return False
+        clean = re.sub(r"^www\.", "", host.lower())
+        if clean in TRUSTED_DOMAINS:
+            return True
+        for trusted in TRUSTED_DOMAINS:
+            if clean == trusted or clean.endswith("." + trusted):
+                return True
+        return False
 
     @staticmethod
     def is_ip_address(host: str) -> bool:
@@ -69,33 +121,37 @@ class URLAnalyzer:
             return True
 
     @classmethod
-    def check_typosquatting(cls, host: str) -> tuple[bool, str]:
+    def check_typosquatting(cls, host: str) -> tuple[bool, str, float]:
         """Check if host is a deceptive variation of a known brand."""
-        if not host:
-            return False, ""
+        if not host or cls.is_trusted_domain(host):
+            return False, "", 0.0
         
-        # Clean host (remove www and TLD)
+        # Clean host (remove www and extract domain tokens)
         clean_host = re.sub(r"^www\.", "", host.lower())
         parts = clean_host.split(".")
-        main_domain = parts[0] if parts else clean_host
-        
-        # Check main domain and hyphenated sub-tokens (e.g. paypa1-security)
+        main_domain = parts[-2] if len(parts) >= 2 else parts[0]
+        tld = parts[-1] if len(parts) >= 2 else ""
         sub_tokens = main_domain.split("-")
-        for token in sub_tokens:
-            for brand in POPULAR_BRANDS:
-                if token == brand:
-                    continue  # Exact match to legitimate brand name (could still be wrong TLD)
-                
-                # Distance of 1 or 2 edits indicates likely typosquatting (e.g., paypa1, g00gle)
+
+        for brand in POPULAR_BRANDS:
+            # 1. Combosquatting: brand name embedded in compound domain
+            if brand in main_domain:
+                if main_domain != brand:
+                    found_lure = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in main_domain]
+                    is_bad_tld = tld in SUSPICIOUS_TLDS
+                    if found_lure or is_bad_tld or "-" in main_domain:
+                        lure_label = found_lure[0] if found_lure else (f".{tld}" if is_bad_tld else "compound name")
+                        return True, f"Suspicious combosquatting: Brand '{brand}' paired with '{lure_label}' in '{host}'", 35.0
+                elif tld in SUSPICIOUS_TLDS:
+                    return True, f"High-risk domain spoofing: Brand '{brand}' registered under .{tld}", 35.0
+
+            # 2. True typosquatting: Levenshtein distance 1 or 2 on sub-tokens (e.g. paypa1, micros0ft, g00gle)
+            for token in sub_tokens:
                 dist = levenshtein_distance(token, brand)
                 if 0 < dist <= 2 and len(token) >= 4:
-                    return True, f"Possible typosquatting of brand '{brand}' (detected: '{token}' in '{host}')"
-                
-                # Check if brand is embedded inside a compound domain
-                if brand in token and len(token) > len(brand):
-                    return True, f"Brand name '{brand}' embedded inside domain '{host}'"
+                    return True, f"Possible typosquatting of brand '{brand}' (detected: '{token}' in '{host}')", 40.0
 
-        return False, ""
+        return False, "", 0.0
 
     @classmethod
     def analyze_url(cls, url_str: str) -> dict:
@@ -116,51 +172,71 @@ class URLAnalyzer:
         path = parsed_url.path or ""
         query = parsed_url.query or ""
         scheme = parsed_url.scheme.lower()
+        tld = host.split(".")[-1].lower() if "." in host else ""
         
-        # 1. Check HTTP vs HTTPS
+        is_homograph = cls.has_homograph_attack(url_str, host)
+        is_trusted = cls.is_trusted_domain(host)
+
+        # 1. Homograph / IDN Spoofing check
+        if is_homograph:
+            risk_score += 50.0
+            flags.append("URL uses non-ASCII characters or Punycode IDN (homograph spoofing attempt).")
+
+        # 2. Authenticated Trusted Domains (Zero risk if legitimate HTTPS and not homograph)
+        if is_trusted and not is_homograph:
+            return {
+                "score": 0.0,
+                "flags": [],
+                "details": {
+                    "host": host,
+                    "scheme": scheme,
+                    "tld": tld,
+                    "is_ip": False,
+                    "has_homograph": False,
+                    "is_typosquatting": False,
+                    "is_trusted": True
+                }
+            }
+
+        # 3. Check HTTP vs HTTPS
         if scheme == "http":
             risk_score += 15.0
             flags.append("URL uses insecure HTTP protocol instead of HTTPS.")
 
-        # 2. Check IP Hostname
+        # 4. Check IP Hostname
         if cls.is_ip_address(host):
             risk_score += 35.0
             flags.append(f"URL uses a raw IP address ({host}) instead of a domain name.")
 
-        # 3. Check Homograph / IDN Attack
-        if cls.has_homograph_attack(url_str, host):
-            risk_score += 40.0
-            flags.append(f"URL uses non-ASCII characters or Punycode IDN (homograph spoofing attempt).")
-
-        # 4. Check Typosquatting
-        is_typo, typo_msg = cls.check_typosquatting(host)
+        # 5. Check Typosquatting / Combosquatting
+        is_typo, typo_msg, typo_weight = cls.check_typosquatting(host)
         if is_typo:
-            risk_score += 35.0
+            risk_score += typo_weight
             flags.append(typo_msg)
 
-        # 5. Check Suspicious TLD
-        tld = host.split(".")[-1].lower() if "." in host else ""
+        # 6. Check Suspicious TLD
         if tld in SUSPICIOUS_TLDS:
             risk_score += 25.0
             flags.append(f"Domain uses high-risk TLD (.{tld}).")
 
-        # 6. Check URL Shortener
+        # 7. Check URL Shortener
         if host in URL_SHORTENERS:
             risk_score += 20.0
             flags.append(f"URL uses shortener service ({host}) to obscure final destination.")
 
-        # 7. Check Excessive Subdomains
+        # 8. Check Excessive Subdomains
         subdomain_count = len(host.split(".")) - 2 if host else 0
         if subdomain_count >= 3:
             risk_score += 20.0
             flags.append(f"Domain contains an excessive number of subdomains ({subdomain_count}).")
 
-        # 8. Check @ symbol trick (http://google.com@attacker.com)
-        if "@" in url_str:
+        # 9. Check @ symbol in userinfo/authority (http://google.com@attacker.com)
+        # Avoid false positives on path containing /@channel
+        if parsed_url.username or parsed_url.password or (parsed_url.netloc and "@" in parsed_url.netloc):
             risk_score += 30.0
-            flags.append("URL contains '@' symbol used for credential embedding or host spoofing.")
+            flags.append("URL contains '@' symbol in authority used for credential embedding or host spoofing.")
 
-        # 9. Check suspicious path keywords
+        # 10. Check suspicious path keywords
         full_path = (path + "?" + query).lower()
         matched_keywords = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in full_path]
         if matched_keywords:
@@ -178,7 +254,8 @@ class URLAnalyzer:
                 "scheme": scheme,
                 "tld": tld,
                 "is_ip": cls.is_ip_address(host),
-                "has_homograph": cls.has_homograph_attack(url_str, host),
-                "is_typosquatting": is_typo
+                "has_homograph": is_homograph,
+                "is_typosquatting": is_typo,
+                "is_trusted": is_trusted
             }
         }

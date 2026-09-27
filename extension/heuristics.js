@@ -6,17 +6,41 @@
 
 // 1. Authenticated Major Global Domains (Never false-flag authentic domains)
 const TRUSTED_DOMAINS = new Set([
+  // Google / Alphabet
   "google.com", "youtube.com", "youtu.be", "ytimg.com", "ggpht.com", "googlevideo.com",
-  "github.com", "github.io", "wikipedia.org", "wikimedia.org",
-  "microsoft.com", "live.com", "office.com", "outlook.com", "bing.com",
-  "apple.com", "icloud.com",
-  "amazon.com", "aws.amazon.com",
-  "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "meta.com",
-  "twitter.com", "x.com", "t.co",
-  "linkedin.com", "reddit.com", "netflix.com", "spotify.com",
-  "twitch.tv", "discord.com", "discord.gg", "steamcommunity.com", "steampowered.com",
-  "cloudflare.com", "stackoverflow.com", "stackexchange.com",
-  "mozilla.org", "w3.org", "medium.com"
+  "gmail.com", "googleapis.com", "gstatic.com", "googletagmanager.com", "googleusercontent.com",
+  "google-analytics.com", "android.com", "chrome.com",
+
+  // GitHub & Developer Ecosystem
+  "github.com", "github.io", "githubstatus.com", "githubassets.com", "githubusercontent.com",
+  "github.community", "github.dev", "gh.io", "gitlab.com", "bitbucket.org",
+  "stackoverflow.com", "stackexchange.com", "npmjs.com", "pypi.org", "python.org",
+  "mozilla.org", "w3.org",
+
+  // Microsoft
+  "microsoft.com", "live.com", "office.com", "office365.com", "outlook.com", "bing.com",
+  "microsoftonline.com", "microsoftteams.com", "azure.com", "visualstudio.com",
+  "windows.com", "msn.com", "skype.com", "xbox.com", "azureedge.net",
+
+  // Apple
+  "apple.com", "icloud.com", "appleid.apple.com", "itunes.com", "cdn-apple.com",
+
+  // Amazon
+  "amazon.com", "aws.amazon.com", "amazonaws.com", "amazonpay.com", "media-amazon.com", "primevideo.com",
+
+  // Meta
+  "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "meta.com", "messenger.com", "fbcdn.net",
+
+  // Social & Media
+  "twitter.com", "x.com", "t.co", "twimg.com", "linkedin.com", "licdn.com",
+  "reddit.com", "redditstatic.com", "netflix.com", "nflxext.com", "spotify.com", "scdn.co",
+  "twitch.tv", "discord.com", "discord.gg", "discordapp.com", "discordstatus.com",
+  "telegram.org", "t.me",
+
+  // Security, Infrastructure & Services
+  "steamcommunity.com", "steampowered.com", "steamstatic.com",
+  "cloudflare.com", "cloudflarestatus.com", "statuspage.io",
+  "openai.com", "chatgpt.com", "wikipedia.org", "wikimedia.org", "medium.com"
 ]);
 
 // 2. High-value brands targeted by phishers
@@ -25,6 +49,13 @@ const POPULAR_BRANDS = [
   "netflix", "bankofamerica", "chase", "wellsfargo", "github",
   "linkedin", "dropbox", "binance", "coinbase", "instagram",
   "twitter", "discord", "steam", "whatsapp", "telegram"
+];
+
+// Phishing action lures commonly used in combosquatting attacks
+const PHISHING_COMBO_KEYWORDS = [
+  "login", "signin", "verify", "verification", "auth", "security",
+  "account", "update", "billing", "support", "secure", "confirm",
+  "wallet", "password", "session", "recover", "helpdesk", "portal"
 ];
 
 const SUSPICIOUS_TLDS = new Set([
@@ -40,7 +71,7 @@ function isTrustedDomain(host) {
   const clean = host.toLowerCase().replace(/^www\./, "");
   if (TRUSTED_DOMAINS.has(clean)) return true;
   for (const trusted of TRUSTED_DOMAINS) {
-    if (clean.endsWith("." + trusted)) {
+    if (clean === trusted || clean.endsWith("." + trusted)) {
       return true;
     }
   }
@@ -93,37 +124,58 @@ function levenshteinDistance(s1, s2) {
  * Check for deceptive brand typosquatting or combosquatting
  */
 function checkTyposquatting(host) {
-  if (!host) return { isTypo: false, reason: "" };
+  if (!host) return { isTypo: false, reason: "", weight: 0 };
+
+  // Never flag verified trusted ecosystem domains
+  if (isTrustedDomain(host)) {
+    return { isTypo: false, reason: "", weight: 0 };
+  }
 
   const cleanHost = host.toLowerCase().replace(/^www\./, "");
   const parts = cleanHost.split(".");
   // Inspect registered domain label (e.g. 'paypa1' from 'paypa1-security.com')
   const mainDomain = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+  const tld = parts.length >= 2 ? parts[parts.length - 1] : "";
 
   const tokens = mainDomain.split("-");
 
-  for (const token of tokens) {
-    for (const brand of POPULAR_BRANDS) {
-      if (token === brand) continue; // Exact brand match (authenticity verified separately)
+  for (const brand of POPULAR_BRANDS) {
+    // 1. Combosquatting: brand name embedded in compound domain
+    if (mainDomain.includes(brand)) {
+      if (mainDomain !== brand) {
+        const foundLure = PHISHING_COMBO_KEYWORDS.find(kw => mainDomain.includes(kw));
+        const isBadTld = SUSPICIOUS_TLDS.has(tld);
+        if (foundLure || isBadTld || mainDomain.includes("-")) {
+          const lureLabel = foundLure || (isBadTld ? `.${tld}` : "compound name");
+          return {
+            isTypo: true,
+            reason: `Suspicious combosquatting: Brand '${brand}' paired with '${lureLabel}' in '${host}'`,
+            weight: 35
+          };
+        }
+      } else if (SUSPICIOUS_TLDS.has(tld)) {
+        return {
+          isTypo: true,
+          reason: `High-risk domain spoofing: Brand '${brand}' registered under .${tld}`,
+          weight: 35
+        };
+      }
+    }
 
+    // 2. True typosquatting: Levenshtein distance 1 or 2 on sub-tokens (e.g. paypa1, micros0ft, g00gle)
+    for (const token of tokens) {
       const dist = levenshteinDistance(token, brand);
       if (dist > 0 && dist <= 2 && token.length >= 4) {
         return {
           isTypo: true,
-          reason: `Possible typosquatting of brand '${brand}' (detected: '${token}' in '${host}')`
-        };
-      }
-
-      if (token.includes(brand) && token.length > brand.length + 3) {
-        return {
-          isTypo: true,
-          reason: `Brand name '${brand}' embedded inside domain '${host}'`
+          reason: `Possible typosquatting of brand '${brand}' (detected: '${token}' in '${host}')`,
+          weight: 45
         };
       }
     }
   }
 
-  return { isTypo: false, reason: "" };
+  return { isTypo: false, reason: "", weight: 0 };
 }
 
 /**
@@ -213,7 +265,7 @@ function evaluateLinkSafety(anchorEl, rawHref) {
   // 3. Typosquatting / Combosquatting Check
   const typoResult = checkTyposquatting(host);
   if (typoResult.isTypo) {
-    score += 45;
+    score += typoResult.weight || 40;
     flags.push(typoResult.reason);
   }
 

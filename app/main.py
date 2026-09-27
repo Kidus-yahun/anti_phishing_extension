@@ -47,9 +47,9 @@ async def health_check():
     ai_status = nlp_engine.get_status()
     return {
         "status": "online",
-        "nlp_model_loaded": nlp_engine.classifier is not None or ai_status.get("roberta_ready"),
+        "nlp_model_loaded": nlp_engine.classifier is not None or ai_status.get("laya_ready") or ai_status.get("roberta_ready"),
         "ai_engine": ai_status,
-        "engine_version": "1.1.0"
+        "engine_version": "1.2.0"
     }
 
 @app.post("/api/analyze")

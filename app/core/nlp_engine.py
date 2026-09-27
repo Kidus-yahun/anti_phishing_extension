@@ -4,6 +4,10 @@ import pickle
 import threading
 from typing import Tuple, List, Dict, Optional
 
+# Disable symlinks on Windows non-admin for HuggingFace Hub downloads
+os.environ["HF_HUB_DISABLE_SYMLINKS"] = "1"
+os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
+
 # Social Engineering Keywords & Weighted Categories
 URGENCY_KEYWORDS = [
     "immediate action", "account suspended", "suspended within 24 hours",
@@ -23,18 +27,20 @@ IMPERSONATION_KEYWORDS = [
     "system alert", "customer support", "fraud department", "ceo request"
 ]
 
+
 class NLPEngine:
     """
-    Dual-Engine NLP and Transformer Engine:
-    - Primary: RoBERTa Deep Transformer (Hugging Face Pipeline)
+    Dual-Engine NLP Threat Detection Engine:
+    - Primary (Model #1): Laya Non-Autoregressive System-1 Decision Engine (convaiinnovations/laya)
+      Delivers calibrated, sub-second (<500ms on CPU, ~35ms on GPU) multilingual semantic decisions.
     - Fallback: Scikit-Learn TF-IDF + Logistic Regression
-    - Heuristics: Weighted psychological manipulation & urgency patterns
+    - Heuristics: Weighted psychological manipulation, urgency, and credential requests
     """
 
     def __init__(
         self,
         model_path: Optional[str] = None,
-        roberta_model_name: str = "roberta-base"
+        laya_model_name: str = "convaiinnovations/laya"
     ):
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         if model_path is None or not os.path.exists(model_path):
@@ -42,25 +48,37 @@ class NLPEngine:
             if os.path.exists(candidate):
                 model_path = candidate
         self.model_path = model_path
-        self.roberta_model_name = roberta_model_name
+        self.laya_model_name = laya_model_name
         self.vectorizer = None
         self.classifier = None
 
-        # RoBERTa Transformer State
-        self._roberta_pipeline = None
-        self._roberta_ready = False
-        self._roberta_loading = False
-        self._roberta_error = None
+        # Laya Decision Engine State
+        self._laya_agent = None
+        self._laya_ready = False
+        self._laya_loading = False
+        self._laya_error = None
 
-        # 1. Load fast local baseline model (immediate boot)
+        # Standard sub-second phishing decision query
+        self._laya_question = {
+            "is_phishing": {
+                "type": "noul",
+                "instructions": "Is this email or text a phishing or scam attempt to steal money, credentials, or personal data?",
+                "criteria": {
+                    "true": "phishing, scam, or fraud attempt",
+                    "false": "a legitimate safe email or message"
+                }
+            }
+        }
+
+        # 1. Load instant local baseline model (immediate boot < 5ms)
         self.load_baseline_model()
 
-        # 2. Trigger asynchronous background initialization of RoBERTa
-        self.init_roberta_async()
+        # 2. Trigger asynchronous background initialization of Laya
+        self.init_laya_async()
 
     def load_baseline_model(self):
         """Load trained Scikit-learn model and vectorizer if available."""
-        if os.path.exists(self.model_path):
+        if self.model_path and os.path.exists(self.model_path):
             try:
                 with open(self.model_path, "rb") as f:
                     data = pickle.load(f)
@@ -69,46 +87,54 @@ class NLPEngine:
             except Exception as e:
                 print(f"[NLPEngine] Error loading baseline model {self.model_path}: {e}")
 
-    def init_roberta_async(self):
-        """Asynchronously load RoBERTa pipeline in background thread to avoid blocking server boot."""
-        if self._roberta_loading or self._roberta_ready:
+    def init_laya_async(self):
+        """Asynchronously load Laya System-1 Agent in background thread to avoid blocking server boot."""
+        if self._laya_loading or self._laya_ready:
             return
 
-        self._roberta_loading = True
+        self._laya_loading = True
 
         def _loader():
             try:
-                print(f"[NLPEngine] Initializing RoBERTa model ({self.roberta_model_name})...")
-                # Import transformers dynamically inside thread
-                from transformers import pipeline
+                print(f"[NLPEngine] Initializing Laya System-1 Model ({self.laya_model_name})...")
+                import laya
 
-                # Zero-shot classification pipeline powered by RoBERTa
-                # Evaluates contextual semantic entailment for social engineering detection
-                pipe = pipeline(
-                    "zero-shot-classification",
-                    model=self.roberta_model_name,
-                    device=-1  # CPU inference
-                )
-                self._roberta_pipeline = pipe
-                self._roberta_ready = True
-                self._roberta_loading = False
-                print(f"[NLPEngine] RoBERTa model ({self.roberta_model_name}) is online and ready!")
+                agent = laya.load(self.laya_model_name)
+                # Warmup pass to eliminate initial JIT/tracing overhead
+                agent.decide("Ping", questions=self._laya_question)
+
+                self._laya_agent = agent
+                self._laya_ready = True
+                self._laya_loading = False
+                print(f"[NLPEngine] Laya System-1 Model ({self.laya_model_name}) is online and ready for sub-second triage!")
             except Exception as e:
-                self._roberta_error = str(e)
-                self._roberta_loading = False
-                print(f"[NLPEngine] RoBERTa initialization deferred (using baseline): {e}")
+                self._laya_error = str(e)
+                self._laya_loading = False
+                print(f"[NLPEngine] Laya initialization deferred (using baseline fallback): {e}")
 
         thread = threading.Thread(target=_loader, daemon=True)
         thread.start()
 
     def get_status(self) -> Dict:
         """Return real-time AI engine status for API health endpoints."""
+        is_ready = self._laya_ready
         return {
-            "roberta_ready": self._roberta_ready,
-            "roberta_loading": self._roberta_loading,
-            "active_model": "RoBERTa-Transformer" if self._roberta_ready else "TF-IDF + LogisticRegression (Baseline)",
-            "model_architecture": self.roberta_model_name if self._roberta_ready else "Scikit-Learn Baseline",
-            "fallback_available": self.classifier is not None
+            "laya_ready": is_ready,
+            "laya_loading": self._laya_loading,
+            "active_model": (
+                "Laya-System1 (ModernBERT Decision Engine)"
+                if is_ready
+                else "TF-IDF + LogisticRegression (Baseline Fallback)"
+            ),
+            "model_architecture": (
+                self.laya_model_name
+                if is_ready
+                else "Scikit-Learn Baseline"
+            ),
+            "fallback_available": self.classifier is not None,
+            # Backwards compatibility keys for legacy dashboard & tests
+            "roberta_ready": is_ready,
+            "roberta_loading": self._laya_loading
         }
 
     def analyze_heuristics(self, text: str) -> Tuple[float, List[str]]:
@@ -148,7 +174,8 @@ class NLPEngine:
 
     def predict(self, text: str) -> Dict:
         """
-        Evaluate text using RoBERTa deep transformer (if ready) or fallback to TF-IDF baseline.
+        Evaluate text using Laya System-1 Model (Primary #1) with sub-second constraint,
+        falling back to Scikit-Learn baseline.
         """
         if not text or not text.strip():
             return {
@@ -164,33 +191,32 @@ class NLPEngine:
         model_used = "Heuristics Only"
 
         # -------------------------------------------------------------
-        # Path 1: RoBERTa Deep Transformer Inference (Primary)
+        # Path 1: Laya Non-Autoregressive System-1 Inference (Primary #1)
         # -------------------------------------------------------------
-        if self._roberta_ready and self._roberta_pipeline:
+        if self._laya_ready and self._laya_agent:
             try:
-                candidate_labels = [
-                    "phishing social engineering attack",
-                    "legitimate safe message"
-                ]
+                # Sub-second latency guardrail: truncate input snippet to first 800 chars
+                snippet = text[:800].strip()
 
-                # Run RoBERTa zero-shot inference
-                result = self._roberta_pipeline(text, candidate_labels)
-                scores = result.get("scores", [])
-                labels = result.get("labels", [])
+                # Single-pass non-autoregressive forward decision (< 500ms on CPU)
+                decision = self._laya_agent.decide(snippet, questions=self._laya_question)
+                phish_res = decision.get("is_phishing", {})
 
-                if "phishing social engineering attack" in labels:
-                    idx = labels.index("phishing social engineering attack")
-                    ml_probability = float(scores[idx])
+                # Extract calibrated noul score (0.0 to 1.0)
+                if isinstance(phish_res, dict):
+                    ml_probability = float(phish_res.get("noul", 0.0))
+                else:
+                    ml_probability = float(getattr(phish_res, "noul", 0.0))
 
-                model_used = f"RoBERTa-Transformer ({self.roberta_model_name})"
+                model_used = f"Laya-System1 ({self.laya_model_name})"
 
-                # RoBERTa deep contextual blend (70% RoBERTa + 30% Heuristics)
-                roberta_score = ml_probability * 100.0
-                final_score = (roberta_score * 0.70) + (heuristic_score * 0.30)
+                # Contextual blend: 70% Laya Deep Semantic + 30% Heuristics
+                laya_score = ml_probability * 100.0
+                final_score = (laya_score * 0.70) + (heuristic_score * 0.30)
 
-                if ml_probability >= 0.65:
+                if ml_probability >= 0.50:
                     flags.append(
-                        f"RoBERTa deep transformer identified semantic deception pattern ({round(ml_probability * 100, 1)}% confidence)."
+                        f"Laya System-1 AI identified social engineering deception pattern ({round(ml_probability * 100, 1)}% confidence)."
                     )
 
                 return {
@@ -201,7 +227,7 @@ class NLPEngine:
                     "heuristic_score": round(heuristic_score, 1)
                 }
             except Exception as e:
-                print(f"[NLPEngine] RoBERTa inference error (falling back): {e}")
+                print(f"[NLPEngine] Laya inference error (falling back to baseline): {e}")
 
         # -------------------------------------------------------------
         # Path 2: Scikit-Learn TF-IDF Baseline Fallback
@@ -216,7 +242,7 @@ class NLPEngine:
                 ml_score = ml_probability * 100.0
                 final_score = (ml_score * 0.60) + (heuristic_score * 0.40)
 
-                if ml_probability >= 0.70 and "Machine learning model identified strong phishing text pattern." not in flags:
+                if ml_probability >= 0.70 and not any("ML model" in f for f in flags):
                     flags.append(
                         f"Baseline ML model flagged phishing pattern ({round(ml_probability * 100, 1)}% confidence)."
                     )

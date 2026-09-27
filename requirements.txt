@@ -7,3 +7,4 @@ pydantic>=2.0.0
 pytest>=7.4.0
 transformers>=4.30.0
 torch>=2.0.0
+laya>=0.3.20
