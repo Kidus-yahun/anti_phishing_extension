@@ -1,0 +1,35 @@
+name: CI / Automated Threat Engine Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Detection Engine Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Validate Manifest V3 Syntax
+        run: |
+          python -c "import json; manifest = json.load(open('extension/manifest.json')); assert manifest['manifest_version'] == 3; print('✅ Manifest V3 Validated!')"
+
+      - name: Run Pytest Suite
+        run: |
+          python -m pytest tests/ -v

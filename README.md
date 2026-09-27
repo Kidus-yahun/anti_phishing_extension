@@ -2,10 +2,11 @@
 
 **PhishShield AI** is a multi-layered cybersecurity platform combining an **AI/ML threat detection engine**, an **interactive web dashboard**, and a **real-time browser extension ("PhishShield Browser Guardian")** that actively scans links across all tabs and neutralizes phishing attacks before users can click them.
 
+[![CI Tests](https://github.com/Kidus-yahun/anti_phishing_extension/actions/workflows/ci.yml/badge.svg)](https://github.com/Kidus-yahun/anti_phishing_extension/actions)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![Laya AI](https://img.shields.io/badge/Laya_AI-System--1_Decision_Engine-8B5CF6)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green)
 ![Chrome Extension](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-red)
-![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-ML%20Classifier-orange)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Glassmorphic%20UI-06B6D4)
 
 ---
