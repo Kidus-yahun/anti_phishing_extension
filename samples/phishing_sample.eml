@@ -1,0 +1,22 @@
+From: PayPal Security Alert <support@paypa1-security-verification.xyz>
+To: target-user@company.com
+Subject: URGENT: Account Suspended - Immediate Action Required
+Date: Mon, 24 Aug 2026 15:00:00 +0300
+Return-Path: <bounce@untrustworthy-host.ru>
+Reply-To: credential-harvest@unknown-domain.com
+Authentication-Results: mx.google.com; spf=fail dkim=fail dmarc=fail
+
+Dear Customer,
+
+We detected an unauthorized sign-in attempt on your PayPal account from an unknown location. 
+
+For your protection, your account features have been temporarily restricted. You must log in within 24 hours to verify your identity and restore full access to your funds.
+
+Please click the secure link below to verify your password and update your billing credentials:
+
+http://paypa1-security-verification.xyz/login.php?ref=urgent
+
+If you do not complete verification within 24 hours, your account will be permanently terminated.
+
+Thank you,
+PayPal Customer Care Team

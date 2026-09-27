@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishShield AI - Phishing & Social Engineering Detection Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            900: '#0b0f19',
+                            800: '#111827',
+                            700: '#1f293d',
+                            accent: '#3b82f6',
+                            danger: '#ef4444',
+                            warning: '#f59e0b',
+                            success: '#10b981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-panel {
+            background: rgba(31, 41, 61, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-red { box-shadow: 0 0 25px rgba(239, 68, 68, 0.25); }
+        .glow-green { box-shadow: 0 0 25px rgba(16, 185, 129, 0.25); }
+        .glow-yellow { box-shadow: 0 0 25px rgba(245, 158, 11, 0.25); }
+    </style>
+</head>
+<body class="bg-cyber-900 text-slate-100 min-h-screen font-sans flex flex-col">
+
+    <!-- Navbar -->
+    <header class="border-b border-slate-800 bg-cyber-800/80 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide text-white">PhishShield <span class="text-blue-400">AI</span></h1>
+                    <p class="text-xs text-slate-400">Social Engineering & Threat Detection Engine</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-2"></span>
+                    NLP & Heuristic Engine Active
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Input Column (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col space-y-6">
+            
+            <!-- Quick Presets -->
+            <div class="glass-panel p-4 rounded-2xl flex flex-wrap gap-2 items-center">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-2">Test Presets:</span>
+                <button onclick="loadSample('phishing')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Phishing Email
+                </button>
+                <button onclick="loadSample('homograph')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-link"></i> Spoofed URL
+                </button>
+                <button onclick="loadSample('safe')" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check"></i> Legitimate Email
+                </button>
+            </div>
+
+            <!-- Analysis Card -->
+            <div class="glass-panel p-6 rounded-2xl flex-1 flex flex-col">
+                <h2 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-microscope text-blue-400"></i> Threat Scanner Inputs
+                </h2>
+
+                <form id="analyze-form" onsubmit="submitAnalysis(event)" class="space-y-4 flex-1 flex flex-col">
+                    
+                    <!-- Text / Body input -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Email / Message Body (NLP Urgency Analysis)</label>
+                        <textarea id="input-text" rows="5" class="w-full bg-cyber-900/90 border border-slate-700/70 rounded-xl p-3 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-slate-500" placeholder="Paste suspicious email text, notification body, or message here..."></textarea>
+                    </div>
+
+                    <!-- URL input -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Embedded Link / Target URL (Domain & Homograph Inspection)</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                <i class="fa-solid fa-globe text-xs"></i>
+                            </div>
+                            <input type="text" id="input-url" class="w-full bg-cyber-900/90 border border-slate-700/70 rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-slate-500" placeholder="e.g. http://paypa1-security-update.com/login.php">
+                        </div>
+                    </div>
+
+                    <!-- Email Headers input -->
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Raw Email Headers (Optional - SPF/DKIM/From Mismatch)</label>
+                        <textarea id="input-header" rows="3" class="w-full bg-cyber-900/90 border border-slate-700/70 rounded-xl p-3 text-xs text-slate-300 font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition placeholder-slate-500" placeholder="From: Paypal Support <attacker@random.com>&#10;Return-Path: <bounce@unrelated.com>&#10;Authentication-Results: spf=fail"></textarea>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="pt-2">
+                        <button type="submit" id="btn-submit" class="w-full py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Analyze Threat Vectors
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Output Column (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-6">
+            
+            <!-- Result Overview Card -->
+            <div id="result-card" class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center text-center min-h-[320px]">
+                
+                <div id="initial-state" class="flex flex-col items-center justify-center text-slate-500 py-12">
+                    <i class="fa-solid fa-shield-cat text-5xl mb-4 text-slate-600 animate-pulse"></i>
+                    <p class="text-sm font-medium">Ready to inspect suspicious links, emails, or headers.</p>
+                    <p class="text-xs text-slate-600 mt-1">Select a test preset above or paste your content to begin.</p>
+                </div>
+
+                <div id="loading-state" class="hidden flex-col items-center justify-center py-12">
+                    <div class="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+                    <p class="text-sm text-slate-300 font-medium">Analyzing NLP patterns, domain heuristics & headers...</p>
+                </div>
+
+                <div id="analysis-output" class="hidden w-full space-y-6">
+                    
+                    <!-- Gauge / Badge -->
+                    <div class="flex flex-col items-center">
+                        <div id="score-ring" class="relative w-36 h-36 rounded-full flex items-center justify-center border-4 border-slate-700 bg-cyber-900/80 mb-3">
+                            <div class="text-center">
+                                <span id="out-score" class="text-4xl font-extrabold tracking-tight">0%</span>
+                                <span class="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-0.5">Risk Score</span>
+                            </div>
+                        </div>
+
+                        <span id="out-badge" class="px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider">
+                            UNKNOWN
+                        </span>
+
+                        <p id="out-verdict" class="text-xs text-slate-300 font-medium mt-3 px-4">
+                            -
+                        </p>
+                    </div>
+
+                    <!-- Breakdown Accordion / Flags -->
+                    <div class="text-left space-y-3">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                            <span>Detected Threat Indicators</span>
+                            <span id="flag-count" class="text-blue-400">0 flags</span>
+                        </h3>
+
+                        <div id="out-flags" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                            <!-- Flags dynamically injected -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-4 bg-cyber-800/40 text-center text-xs text-slate-500">
+        PhishShield AI Security Engine &copy; 2026 | Multi-Vector Social Engineering Analysis System
+    </footer>
+
+    <script>
+        const samples = {
+            phishing: {
+                text: "URGENT: Your PayPal account has been suspended due to an unauthorized login attempt from an unknown device. Please click the link below to verify your password and update your billing credentials immediately to avoid permanent termination within 24 hours.",
+                url: "http://paypa1-security-verification.xyz/login.php",
+                header: "From: PayPal Security <support@paypa1-security-verification.xyz>\nReturn-Path: <bounce@untrustworthy-host.ru>\nAuthentication-Results: spf=fail dkim=fail dmarc=fail"
+            },
+            homograph: {
+                text: "Dear customer, your Google Drive storage is full. Please extend your subscription.",
+                url: "http://pаypal.com/verify-account", // Contains Cyrillic 'а'
+                header: "From: Google Drive Alert <no-reply@g00gle-drive-billing.com>\nAuthentication-Results: spf=softfail"
+            },
+            safe: {
+                text: "Hi Alex,\n\nPlease find attached the minutes from our team sync call this morning. Let me know if you have any feedback before our client presentation tomorrow.",
+                url: "https://github.com/Kidus-yahun/Smart-Bus-Booking",
+                header: "From: Sarah Jenkins <sarah.jenkins@company.com>\nReturn-Path: <sarah.jenkins@company.com>\nAuthentication-Results: spf=pass dkim=pass dmarc=pass"
+            }
+        };
+
+        function loadSample(key) {
+            const data = samples[key];
+            if (data) {
+                document.getElementById('input-text').value = data.text;
+                document.getElementById('input-url').value = data.url;
+                document.getElementById('input-header').value = data.header;
+            }
+        }
+
+        async function submitAnalysis(e) {
+            e.preventDefault();
+
+            const text = document.getElementById('input-text').value;
+            const url = document.getElementById('input-url').value;
+            const header = document.getElementById('input-header').value;
+
+            if (!text && !url && !header) {
+                alert("Please provide at least one input (text, URL, or header).");
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('initial-state').classList.add('hidden');
+            document.getElementById('analysis-output').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('loading-state').classList.add('flex');
+
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, url, headers: header })
+                });
+
+                const data = await response.json();
+
+                renderResults(data);
+
+            } catch (err) {
+                alert("Error connecting to threat detection server: " + err.message);
+            } finally {
+                document.getElementById('loading-state').classList.remove('flex');
+                document.getElementById('loading-state').classList.add('hidden');
+            }
+        }
+
+        function renderResults(data) {
+            document.getElementById('analysis-output').classList.remove('hidden');
+
+            const score = data.risk_score;
+            const level = data.risk_level;
+            const color = data.badge_color;
+            const verdict = data.verdict;
+            const flags = data.flags || [];
+
+            // Score text & color
+            const scoreEl = document.getElementById('out-score');
+            scoreEl.innerText = score + '%';
+
+            const ringEl = document.getElementById('score-ring');
+            const badgeEl = document.getElementById('out-badge');
+            
+            // Reset styles
+            ringEl.className = "relative w-36 h-36 rounded-full flex items-center justify-center border-4 bg-cyber-900/80 mb-3 transition-all duration-500 ";
+            badgeEl.className = "px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-wider border ";
+
+            if (color === 'red') {
+                ringEl.classList.add('border-red-500', 'text-red-400', 'glow-red');
+                badgeEl.classList.add('bg-red-500/20', 'text-red-400', 'border-red-500/40');
+            } else if (color === 'orange') {
+                ringEl.classList.add('border-orange-500', 'text-orange-400', 'glow-yellow');
+                badgeEl.classList.add('bg-orange-500/20', 'text-orange-400', 'border-orange-500/40');
+            } else if (color === 'yellow') {
+                ringEl.classList.add('border-amber-400', 'text-amber-300', 'glow-yellow');
+                badgeEl.classList.add('bg-amber-400/20', 'text-amber-300', 'border-amber-400/40');
+            } else {
+                ringEl.classList.add('border-emerald-500', 'text-emerald-400', 'glow-green');
+                badgeEl.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/40');
+            }
+
+            badgeEl.innerText = level;
+            document.getElementById('out-verdict').innerText = verdict;
+            document.getElementById('flag-count').innerText = flags.length + " flags detected";
+
+            // Render Flags list
+            const flagsContainer = document.getElementById('out-flags');
+            flagsContainer.innerHTML = '';
+
+            if (flags.length === 0) {
+                flagsContainer.innerHTML = `
+                    <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                        <i class="fa-solid fa-shield-check text-sm"></i>
+                        <span>No suspicious phishing patterns found across analyzed vectors.</span>
+                    </div>
+                `;
+            } else {
+                flags.forEach(flag => {
+                    const flagDiv = document.createElement('div');
+                    flagDiv.className = 'p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs text-slate-200 flex items-start gap-2.5';
+                    flagDiv.innerHTML = `
+                        <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm mt-0.5 shrink-0"></i>
+                        <span>${flag}</span>
+                    `;
+                    flagsContainer.appendChild(flagDiv);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
