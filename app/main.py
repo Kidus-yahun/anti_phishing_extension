@@ -33,6 +33,11 @@ async def serve_dashboard(request: Request):
     """Serve main cybersecurity web dashboard."""
     return templates.TemplateResponse(request=request, name="index.html")
 
+@app.get("/test-lab", response_class=HTMLResponse)
+async def serve_test_lab(request: Request):
+    """Serve interactive phishing & malicious link simulation test lab."""
+    return templates.TemplateResponse(request=request, name="test_lab.html")
+
 @app.get("/api/health")
 async def health_check():
     """Engine health status."""
