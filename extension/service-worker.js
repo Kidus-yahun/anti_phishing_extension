@@ -31,20 +31,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             await chrome.action.setBadgeText({ tabId, text: "" });
           }
 
-          // Persist tab state in chrome.storage.local (Rule 7: ephemeral service workers)
+          // Read previous count to only accumulate new threats (prevents infinite ballooning)
+          const tabData = await chrome.storage.local.get([`tab_${tabId}`, "totalBlockedAllTime"]);
+          const prevTabStats = tabData[`tab_${tabId}`];
+          const prevCount = prevTabStats ? prevTabStats.threatCount || 0 : 0;
+          const totalAllTime = tabData.totalBlockedAllTime || 0;
+          const diff = Math.max(0, count - prevCount);
+
           await chrome.storage.local.set({
             [`tab_${tabId}`]: {
               threatCount: protectionEnabled ? count : 0,
               url: sender.tab.url || "",
               updatedAt: Date.now()
-            }
+            },
+            totalBlockedAllTime: totalAllTime + (protectionEnabled ? diff : 0)
           });
-
-          // Update all-time blocked stats if new threats found
-          if (protectionEnabled && count > 0) {
-            const { totalBlockedAllTime = 0 } = await chrome.storage.local.get("totalBlockedAllTime");
-            await chrome.storage.local.set({ totalBlockedAllTime: totalBlockedAllTime + count });
-          }
         }
 
         sendResponse({ success: true });
