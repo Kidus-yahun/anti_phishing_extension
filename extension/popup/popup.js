@@ -109,10 +109,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     backendText.textContent = "Standalone Mode";
   }
 
-  // 4. Open Web Dashboard Listener
+  // 4. Open Threat Dashboard Listener (Works 100% offline or online via extension)
   btnOpenDashboard.addEventListener("click", async () => {
-    await chrome.tabs.create({ url: "http://127.0.0.1:8000" });
+    await chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
   });
+
+  // Open Test Lab from popup
+  const linkTestLab = document.getElementById("link-test-lab");
+  if (linkTestLab) {
+    linkTestLab.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await chrome.tabs.create({ url: chrome.runtime.getURL("test_lab.html") });
+    });
+  }
 
   // 5. Reset All-Time Counter Listener
   const btnResetStats = document.getElementById("btn-reset-stats");

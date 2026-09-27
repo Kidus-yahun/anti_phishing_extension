@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishShield AI - Threat Detection Platform</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="navbar-container">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <h1 class="brand-title">PhishShield <span class="accent">AI</span></h1>
+          <p class="brand-subtitle">Social Engineering & Multi-Vector Threat Analysis</p>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <a id="nav-test-lab" href="test_lab.html" class="nav-btn">
+          <span>🧪</span> Threat Test Lab
+        </a>
+        <span id="ai-model-badge" class="status-pill">
+          <span id="ai-status-dot" class="status-dot pulse"></span>
+          <span id="ai-model-text">Checking Engine Status...</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- Input Column (Left) -->
+    <div class="column">
+      
+      <!-- Quick Presets -->
+      <div class="glass-panel presets-card">
+        <span class="presets-label">Test Presets:</span>
+        <button type="button" class="btn-preset btn-preset-purple" data-preset="laya_stealth">
+          <span>🧠</span> Laya Stealth Phish
+        </button>
+        <button type="button" class="btn-preset btn-preset-red" data-preset="phishing">
+          <span>⚠️</span> Urgent PayPal Phish
+        </button>
+        <button type="button" class="btn-preset btn-preset-amber" data-preset="homograph">
+          <span>🔗</span> Spoofed URL
+        </button>
+        <button type="button" class="btn-preset btn-preset-green" data-preset="safe">
+          <span>✅</span> Legitimate Email
+        </button>
+      </div>
+
+      <!-- Threat Scanner Inputs Card -->
+      <div class="glass-panel scanner-card">
+        <h2 class="card-title">
+          <span>🔬</span> Threat Scanner Inputs
+        </h2>
+
+        <form id="analyze-form">
+          <!-- Text / Body input -->
+          <div class="form-group">
+            <label class="form-label" for="input-text">
+              Email / Message Body (NLP Urgency & Social Engineering Analysis)
+            </label>
+            <textarea id="input-text" rows="5" class="form-textarea" placeholder="Paste suspicious email text, notification body, or message here..."></textarea>
+          </div>
+
+          <!-- URL input -->
+          <div class="form-group">
+            <label class="form-label" for="input-url">
+              Embedded Link / Target URL (Autonomous Domain & Spoofing Inspection)
+            </label>
+            <input type="text" id="input-url" class="form-input" placeholder="e.g. http://paypa1-security-verification.xyz/login.php">
+          </div>
+
+          <!-- Email Headers input -->
+          <div class="form-group">
+            <label class="form-label" for="input-header">
+              Raw Email Headers (Optional - SPF/DKIM/From Mismatch)
+            </label>
+            <textarea id="input-header" rows="3" class="form-textarea code" placeholder="From: Paypal Support <attacker@random.com>&#10;Return-Path: <bounce@unrelated.com>&#10;Authentication-Results: spf=fail dkim=fail"></textarea>
+          </div>
+
+          <!-- Action Button -->
+          <button type="submit" id="btn-submit" class="btn-submit">
+            <span>⚡</span> Analyze Threat Vectors
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Output Column (Right) -->
+    <div class="column">
+      
+      <!-- Result Overview Card -->
+      <div id="result-card" class="glass-panel results-card">
+        
+        <!-- Initial Blank State -->
+        <div id="initial-state" class="state-container">
+          <div class="empty-icon">🛡️</div>
+          <p class="empty-text">Ready to inspect suspicious links, emails, or headers.</p>
+          <p class="empty-subtext">Select a test preset or paste custom content to evaluate risk.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="state-container hidden">
+          <div class="spinner"></div>
+          <p class="empty-text">Analyzing NLP patterns, domain heuristics & headers...</p>
+        </div>
+
+        <!-- Analysis Output -->
+        <div id="analysis-output" class="state-container hidden" style="padding: 0;">
+          
+          <!-- Gauge / Circle -->
+          <div id="score-ring" class="score-circle">
+            <span id="out-score" class="score-value">0%</span>
+          </div>
+
+          <div id="out-badge" class="risk-badge">SAFE</div>
+          <p id="out-verdict" class="verdict-text"></p>
+          
+          <div id="engine-mode-tag" class="engine-source-pill">
+            ⚡ Engine: Standalone Local Client Engine
+          </div>
+
+          <!-- Flags Container -->
+          <div class="flags-section">
+            <div class="flags-header">
+              <span class="flags-title">Threat Indicators</span>
+              <span id="flag-count" class="flags-count">0 flags detected</span>
+            </div>
+            <div id="out-flags" class="flags-list"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Extension Stats Footer -->
+  <footer class="extension-stats-bar">
+    <div>
+      🛡️ PhishShield AI Browser Extension • Protected Tabs: <strong id="stat-total-blocked" style="color: #60a5fa;">0</strong> Threats Blocked All-Time
+    </div>
+    <div>
+      v1.0.0 • Client-Side Autonomous Protection
+    </div>
+  </footer>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

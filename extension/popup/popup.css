@@ -207,12 +207,45 @@ input:checked + .slider:before {
   margin-top: 2px;
 }
 
+/* Dashboard Action Card */
+.dashboard-action-card {
+  width: 100%;
+}
+
+.btn-dashboard {
+  width: 100%;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-dashboard:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-dashboard:active {
+  transform: translateY(0);
+}
+
 /* Backend Status */
 .backend-status-card {
   background: #111827;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -241,20 +274,20 @@ input:checked + .slider:before {
   color: #9ca3af;
 }
 
-.btn-dashboard {
-  background: #1f293d;
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 10px;
+.test-lab-link {
+  font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
+  color: #60a5fa;
+  text-decoration: none;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  padding: 3px 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
-.btn-dashboard:hover {
-  background: #2563eb;
+.test-lab-link:hover {
+  background: rgba(59, 130, 246, 0.2);
   color: #ffffff;
 }
 
