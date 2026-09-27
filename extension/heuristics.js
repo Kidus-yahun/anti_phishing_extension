@@ -61,21 +61,20 @@ function checkDeceptiveTyposquatting(host) {
   for (const brand of MONITORED_BRANDS) {
     // 1. Intentional Character/Digit Substitution (e.g. paypa1, micros0ft, g00gle)
     for (const token of tokens) {
-      if (token !== brand) {
-        const normalized = token
-          .replace(/1/g, "l")
-          .replace(/0/g, "o")
-          .replace(/vv/g, "w")
-          .replace(/rn/g, "m");
+        const normVariants = [
+          token.replace(/1/g, "l").replace(/0/g, "o").replace(/vv/g, "w").replace(/rn/g, "m"),
+          token.replace(/1/g, "i").replace(/0/g, "o").replace(/vv/g, "w").replace(/rn/g, "m"),
+          token.replace(/1/g, "l"),
+          token.replace(/1/g, "i")
+        ];
 
-        if (normalized === brand && token !== brand) {
+        if (token !== brand && normVariants.includes(brand)) {
           return {
             isTypo: true,
             reason: `Deceptive typosquatting: Brand '${brand}' spoofed using character substitution in '${host}'`,
             score: 75
           };
         }
-      }
     }
 
     // 2. High-Risk Combosquatting (Brand + Phishing Lure Keyword e.g. chase-security-update.top)

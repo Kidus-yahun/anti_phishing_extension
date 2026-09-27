@@ -57,6 +57,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const tabStats = data[tabKey];
     currentThreatCount = tabStats ? tabStats.threatCount || 0 : 0;
+
+    // Real-time direct query to active tab content script
+    try {
+      const liveTabResp = await chrome.tabs.sendMessage(activeTab.id, { type: "GET_TAB_THREATS" });
+      if (liveTabResp && liveTabResp.threatCount !== undefined) {
+        currentThreatCount = liveTabResp.threatCount;
+      }
+    } catch (e) {
+      // Tab may be an internal page without content script
+    }
+
     const totalAllTime = data.totalBlockedAllTime || 0;
     const isProtected = data.protectionEnabled !== false; // default true
 

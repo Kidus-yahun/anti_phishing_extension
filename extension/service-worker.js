@@ -18,7 +18,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
       if (message.type === "UPDATE_TAB_THREATS") {
-        const tabId = sender.tab ? sender.tab.id : null;
+        let tabId = sender.tab ? sender.tab.id : null;
+        let tabUrl = sender.tab ? (sender.tab.url || "") : "";
+        if (!tabId) {
+          try {
+            const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (activeTab) {
+              tabId = activeTab.id;
+              tabUrl = activeTab.url || "";
+            }
+          } catch (e) {}
+        }
         const count = message.threatCount || 0;
         const { protectionEnabled = true } = await chrome.storage.local.get("protectionEnabled");
 
@@ -41,7 +51,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           await chrome.storage.local.set({
             [`tab_${tabId}`]: {
               threatCount: protectionEnabled ? count : 0,
-              url: sender.tab.url || "",
+              url: tabUrl,
               updatedAt: Date.now()
             },
             totalBlockedAllTime: totalAllTime + (protectionEnabled ? diff : 0)

@@ -145,13 +145,13 @@ class URLAnalyzer:
             # 2. Deceptive character substitution (e.g. paypa1, micros0ft, g00gle)
             for token in sub_tokens:
                 if token != brand and len(token) >= 4:
-                    normalized = (
-                        token.replace("1", "l")
-                        .replace("0", "o")
-                        .replace("vv", "w")
-                        .replace("rn", "m")
-                    )
-                    if normalized == brand:
+                    norm_variants = [
+                        token.replace("1", "l").replace("0", "o").replace("vv", "w").replace("rn", "m"),
+                        token.replace("1", "i").replace("0", "o").replace("vv", "w").replace("rn", "m"),
+                        token.replace("1", "l"),
+                        token.replace("1", "i")
+                    ]
+                    if brand in norm_variants:
                         return True, f"Possible typosquatting of brand '{brand}' (detected: '{token}' in '{host}')", 40.0
 
                     # Single edit distance only if token explicitly targets brand prefix

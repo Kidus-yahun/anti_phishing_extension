@@ -19,9 +19,15 @@ app = FastAPI(
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+EXTENSION_DIR = os.path.join(PROJECT_ROOT, "extension")
 
 # Setup templates
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+# Mount extension static assets
+if os.path.exists(EXTENSION_DIR):
+    app.mount("/extension", StaticFiles(directory=EXTENSION_DIR), name="extension")
 
 # Instantiate NLP Engine
 nlp_engine = NLPEngine()

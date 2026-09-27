@@ -5,6 +5,9 @@
  */
 
 (() => {
+  if (window.__PHISHSHIELD_LOADED__) return;
+  window.__PHISHSHIELD_LOADED__ = true;
+
   let isProtectionActive = false;
   let flaggedThreats = [];
   let isScanning = false;
@@ -20,10 +23,14 @@
    */
   async function init() {
     try {
-      const data = await chrome.storage.local.get("protectionEnabled");
-      const isEnabled = data.protectionEnabled !== false; // default true
+      if (chrome.storage && chrome.storage.local) {
+        const data = await chrome.storage.local.get("protectionEnabled");
+        const isEnabled = data.protectionEnabled !== false; // default true
 
-      if (isEnabled) {
+        if (isEnabled) {
+          enableProtection();
+        }
+      } else {
         enableProtection();
       }
     } catch (e) {
@@ -39,28 +46,41 @@
    */
   function setupStateListeners() {
     // 1. Storage change listener across all tabs
-    chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === "local" && changes.protectionEnabled !== undefined) {
-        const isEnabled = changes.protectionEnabled.newValue !== false;
-        if (isEnabled && !isProtectionActive) {
-          enableProtection();
-        } else if (!isEnabled && isProtectionActive) {
-          disableProtection();
+    if (chrome.storage && chrome.storage.onChanged) {
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === "local" && changes.protectionEnabled !== undefined) {
+          const isEnabled = changes.protectionEnabled.newValue !== false;
+          if (isEnabled && !isProtectionActive) {
+            enableProtection();
+          } else if (!isEnabled && isProtectionActive) {
+            disableProtection();
+          }
         }
-      }
-    });
+      });
+    }
 
     // 2. Direct runtime message listener from popup
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === "SET_PROTECTION_STATE") {
-        if (message.enabled && !isProtectionActive) {
-          enableProtection();
-        } else if (!message.enabled && isProtectionActive) {
-          disableProtection();
+    if (chrome.runtime && chrome.runtime.onMessage) {
+      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.type === "GET_TAB_THREATS") {
+          sendResponse({
+            threatCount: flaggedThreats.length,
+            active: isProtectionActive,
+            threats: flaggedThreats.map((t) => ({ url: t.url, flags: t.flags }))
+          });
+          return true;
         }
-        sendResponse({ success: true, active: isProtectionActive });
-      }
-    });
+
+        if (message.type === "SET_PROTECTION_STATE") {
+          if (message.enabled && !isProtectionActive) {
+            enableProtection();
+          } else if (!message.enabled && isProtectionActive) {
+            disableProtection();
+          }
+          sendResponse({ success: true, active: isProtectionActive });
+        }
+      });
+    }
   }
 
   /**
@@ -283,6 +303,10 @@
    */
   function observeMutations() {
     if (!isProtectionActive) return;
+    if (!document.body) {
+      window.addEventListener("DOMContentLoaded", observeMutations, { once: true });
+      return;
+    }
 
     mutationObserver = new MutationObserver((mutations) => {
       if (!isProtectionActive) return;
@@ -316,6 +340,10 @@
    */
   function createFloatingPill() {
     if (!isProtectionActive || document.getElementById("phishshield-floating-pill")) return;
+    if (!document.body) {
+      window.addEventListener("DOMContentLoaded", createFloatingPill, { once: true });
+      return;
+    }
 
     pillElement = document.createElement("div");
     pillElement.id = "phishshield-floating-pill";
