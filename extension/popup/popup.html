@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhishShield AI Guardian</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <div class="logo-icon">🛡️</div>
+        <div>
+          <h1 class="logo-title">PhishShield <span class="accent">AI</span></h1>
+          <p class="logo-subtitle">Real-Time Browser Guardian</p>
+        </div>
+      </div>
+      <div class="toggle-container">
+        <label class="switch" title="Toggle Real-Time Protection">
+          <input type="checkbox" id="toggle-protection" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </header>
+
+    <!-- Tab Security Status Card -->
+    <div id="status-card" class="status-card safe">
+      <div class="status-icon" id="status-icon">✅</div>
+      <div class="status-details">
+        <h2 class="status-title" id="status-title">Current Tab is Safe</h2>
+        <p class="status-subtitle" id="status-subtitle">No phishing links or spoofed domains detected.</p>
+      </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-value" id="tab-threats-count">0</span>
+        <span class="stat-label">Blocked on Tab</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-value" id="all-time-count">0</span>
+        <span class="stat-label">Total Blocked</span>
+      </div>
+    </div>
+
+    <!-- Backend Status & Actions -->
+    <div class="backend-status-card">
+      <div class="backend-indicator">
+        <span class="dot" id="backend-dot"></span>
+        <span class="backend-text" id="backend-text">Checking ML engine...</span>
+      </div>
+      <button id="btn-open-dashboard" class="btn-dashboard">
+        Open Web Dashboard
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>PhishShield AI v1.0 • Multi-Vector Defense</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
