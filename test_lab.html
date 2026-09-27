@@ -333,7 +333,12 @@
 
     <!-- Header -->
     <header class="lab-header">
-      <div class="badge-pill">🛡️ PhishShield Security Sandbox</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div class="badge-pill" style="margin-bottom: 0;">🛡️ PhishShield Security Sandbox</div>
+        <a id="nav-dashboard-link" href="index.html" style="font-size: 12px; font-weight: 600; color: #38bdf8; text-decoration: none; padding: 6px 14px; border-radius: 8px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+          ← Back to Threat Dashboard
+        </a>
+      </div>
       <h1>Interactive Phishing & Malicious Link Test Lab</h1>
       <p>
         This test bench contains realistic phishing techniques, homograph domain attacks, typosquats, and dynamic link injection vectors. Use this page to verify that the <strong>PhishShield Browser Extension</strong> flags malicious links with pulsing badges, blocks deceptive clicks, and avoids false alarms on safe links.
@@ -584,6 +589,12 @@
     document.getElementById("btn-clear").addEventListener("click", () => {
       document.getElementById("dynamic-injection-area").innerHTML = "";
     });
+
+    // 4. Adapt navigation link for server mode vs local file mode
+    if (window.location.protocol !== 'file:') {
+      const dashLink = document.getElementById('nav-dashboard-link');
+      if (dashLink) dashLink.href = '/';
+    }
   </script>
 </body>
 </html>
