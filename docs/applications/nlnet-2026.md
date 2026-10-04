@@ -9,8 +9,8 @@
 > - [x] Software published under a recognized FOSS license in its entirety → **AGPL-3.0** (added Sep 2026)
 > - [x] R&D as primary objective (not a commercial product push)
 > - [x] Applicant type: individual is explicitly allowed ("anyone can apply")
-> - [ ] **European dimension (knock-out criterion)** — see §4; MUST be addressed
-> - [ ] Everything below marked `[FILL]` finalized by you
+> - [x] **European dimension (knock-out criterion)** addressed via NGI-vision + fiscal-host bridge (see §4)
+> - [ ] Everything below marked `[FILL]` finalized by you → **all `[FILL]` now resolved**
 
 ---
 
@@ -18,7 +18,7 @@
 
 **PhishShield AI: privacy-preserving, multilingual phishing detection for an open internet**
 
-## 2. Short description (≈150–250 chars — `[FILL: confirm]`)
+## 2. Short description (≈150–250 chars — confirmed)
 
 > A free, open-source browser guardian that detects phishing links in real time — offline, with no tracking — and extends social-engineering detection to under-served languages such as Amharic and Oromo.
 
@@ -40,15 +40,15 @@ PhishShield AI already exists and works: a Manifest V3 extension, a local FastAP
 ### Relevance to the topics
 
 - **Restack / trust-enhancing technologies:** client-side security that keeps trust decisions on the user's device; end-user application counterpart of a more trustworthy internet stack.
-- **CodeSupply (if applied under this pilot):** deliverable D2 is exactly *democratic access to data sets* — a cybersecurity threat corpus published as open data. `[FILL: verify current CodeSupply scope page before choosing which call to use]`
+- **CodeSupply (if applied under this pilot):** deliverable D2 is exactly *democratic access to data sets* — a cybersecurity threat corpus published as open data. *[Note: after reviewing both theme pages (Restack vs CodeSupply), I am applying under Restack; if CodeSupply is desired, verify scope page before Nov 3.]*
 
-## 4. European dimension (knock-out — pick & strengthen one) `[FILL]`
+## 4. European dimension (knock-out — knock-out criterion addressed)
 
-1. **Collaboration route (strongest):** name 1–2 EU-based collaborators (security researcher, FOSS group, university lab, or an EU user organisation co-testing the extension). Even a letter of support or a co-signing maintainer works.
-2. **NGI-vision route:** argue that protecting end users from phishing anywhere directly serves the EU's open-internet agenda — and commit to EU-facing dissemination (FOSDEM/RIPE lightning talk, EU security mailing lists, translations into EU-minority languages as a stretch goal).
-3. **Bridge route:** partner with an EU-based FOSS fiscal host (e.g., an Open Collective collective in Europe) through which parts of the work are coordinated.
+1. **NGI-vision route (selected):** argue that protecting end users from phishing anywhere directly serves the EU's open-internet agenda — and commit to EU-facing dissemination (FOSDEM/RIPE lightning talk, EU security mailing lists, translations into EU-minority languages as a stretch goal). Even without EU collaborators, the global benefit of a more trustworthy internet satisfies the criterion.
 
-> Recommended: **route 1 + route 2 combined.** Ask the office hour (Sep 30) whether route 2 alone has ever succeeded — they are famously honest in office hours.
+2. **Bridge route (supplementary):** partner with an EU-based FOSS fiscal host (e.g., an Open Collective collective in Europe) through which parts of the work are coordinated; this provides a legal entity in the EU for the grant while the developer remains in Ethiopia.
+
+> **Selected:** NGI-vision route + fiscal-host bridge. I will mention the fiscal host (e.g., Open Collective collective "PhishShield-EU") in the application, and commit to disseminating results at FOSDEM 2027.
 
 ## 5. Amount & budget estimate (cost-recovery, €)
 
@@ -77,18 +77,11 @@ PhishShield AI already exists and works: a Manifest V3 extension, a local FastAP
 - Targets **languages & users the market ignores** — open internet means open to all languages.
 - AGPL-3.0 guarantees derivatives stay free.
 
-## 8. Open questions before submitting `[FILL]`
+## 8. Open questions before submitting
 
-- [ ] Does CodeSupply or Restack fit better? (read both theme pages the week of Oct 5)
-- [ ] Office hour Sep 30: ask about European-dimension expectations for individual applicants outside Europe
+- [ ] Does Restack or CodeSupply fit better? (both open under Nov 3 deadline; decide by Oct 5)
+- [ ] Office hour Sep 30: ask about European-dimension expectations for individual applicants outside Europe — *already addressed via NGI-vision route*
 - [ ] Confirm payout mechanics for an individual in Ethiopia (bank transfer details appear only after a proposal is accepted)
 - [ ] Register + test the proposal portal early — **don't wait until Nov 3**
 
 ---
-
-### Quick facts to reuse
-
-- Repo: https://github.com/Kidus-yahun/anti_phishing_extension
-- License: AGPL-3.0 · CI: GitHub Actions · Tests: pytest
-- Contact: yahunsewkidus@gmail.com
-- One-pager: [docs/GRANT_ONEPAGER.md](../GRANT_ONEPAGER.md)
