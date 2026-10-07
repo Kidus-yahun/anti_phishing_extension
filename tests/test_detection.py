@@ -118,15 +118,37 @@ def test_legitimate_sites_no_false_positives():
         assert not any("typosquatting" in f.lower() for f in res["flags"])
 
 def test_laya_evaluate_url():
-    """Verify autonomous Laya link verification."""
+    """Verify autonomous Laya link verification and anchor precision."""
     nlp = NLPEngine(model_path="app/models/phishing_model.pkl")
     
     # Test legitimate URL evaluation
     legit_res = nlp.evaluate_url("https://dribbble.com/popular")
     assert not legit_res["is_phishing"]
 
+    # Test legitimate software downloads and releases (no false positives)
+    rufus_res = nlp.evaluate_url(
+        "https://github.com/pbatard/rufus/releases/download/v4.15/rufus-4.15.exe",
+        anchor_text="rufus-4.15.exe"
+    )
+    assert not rufus_res["is_phishing"], "Rufus download link must never be flagged as phishing"
+
+    portable_res = nlp.evaluate_url(
+        "https://github.com/pbatard/rufus/releases/download/v4.15/rufus-4.15p.exe",
+        anchor_text="rufus-4.15p.exe"
+    )
+    assert not portable_res["is_phishing"], "Rufus portable link must never be flagged as phishing"
+
+    # Test deceptive anchor text spoofing attack
+    spoof_res = nlp.evaluate_url(
+        "http://credential-stealer.xyz/login",
+        anchor_text="https://www.google.com/security"
+    )
+    assert spoof_res["is_phishing"]
+    assert spoof_res["score"] >= 75.0
+
     # Test obvious phishing URL evaluation
     phish_res = nlp.evaluate_url("http://paypa1-security-verification.xyz/login.php")
     assert phish_res["is_phishing"]
     assert phish_res["score"] >= 60.0
+
 

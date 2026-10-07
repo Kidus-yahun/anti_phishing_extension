@@ -96,31 +96,97 @@ function checkDeceptiveTyposquatting(host) {
   return { isTypo: false, reason: "", score: 0 };
 }
 
+// Non-domain file extensions that must NEVER be parsed as domain TLDs
+const NON_DOMAIN_FILE_EXTENSIONS = new Set([
+  // Windows & PC executables & installers
+  "exe", "msi", "bat", "cmd", "scr", "pif", "bin", "run", "gadget",
+  "dmg", "pkg", "deb", "rpm", "apk", "apks", "xapk", "aab", "ipa", "msix", "appx", "appimage",
+  // Archives & compressed files
+  "zip", "7z", "rar", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "txz", "lz", "lzma", "zst", "tzst",
+  "iso", "img", "vmdk", "vdi", "qcow2", "vhd", "toast",
+  // Documents & spreadsheets
+  "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv", "tsv",
+  // Media (audio, video, images)
+  "png", "jpg", "jpeg", "gif", "bmp", "svg", "webp", "ico", "tif", "tiff", "psd", "raw",
+  "mp3", "wav", "flac", "aac", "ogg", "m4a", "wma", "mid", "midi",
+  "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "3gp",
+  // Code & scripts
+  "py", "pyw", "js", "mjs", "cjs", "ts", "rb", "php", "java", "cpp", "cxx", "hpp", "cs",
+  "sh", "bash", "zsh", "fish", "ps1", "psm1", "json", "xml", "yaml", "yml", "toml", "ini", "cfg", "conf", "log", "md", "markdown",
+  // Libraries & distributions
+  "jar", "war", "ear", "whl", "egg", "gem", "node", "dylib", "dll",
+  // Signatures & torrents
+  "sig", "asc", "sha256", "sha512", "md5", "torrent", "patch", "diff"
+]);
+
+/**
+ * Extracts an explicit domain claim from anchor text if and only if the text
+ * is genuinely asserting a web host destination (not a filename, path, or label).
+ */
+function extractClaimedDomain(anchorText, parsedUrl) {
+  if (!anchorText) return null;
+  const text = anchorText.trim().toLowerCase();
+  if (!text) return null;
+
+  // 1. If anchor text matches the destination file name or URL path ending, it's a file link
+  if (parsedUrl && parsedUrl.pathname) {
+    const pathLower = parsedUrl.pathname.toLowerCase();
+    const filename = pathLower.split("/").filter(Boolean).pop() || "";
+    if (filename && (text === filename || pathLower.endsWith("/" + text) || text.endsWith(filename))) {
+      return null;
+    }
+  }
+
+  // 2. Explicit URL scheme: https://... or http://...
+  const urlMatch = text.match(/(?:^|\s)https?:\/\/([a-z0-9.-]+)/i);
+  if (urlMatch) {
+    const rawHost = urlMatch[1].replace(/^www\./, "");
+    const parts = rawHost.split(".");
+    const ext = parts[parts.length - 1];
+    if (!NON_DOMAIN_FILE_EXTENSIONS.has(ext)) {
+      return rawHost;
+    }
+  }
+
+  // 3. Explicit www. prefix: www.google.com
+  const wwwMatch = text.match(/(?:^|\s)www\.([a-z0-9.-]+\.[a-z]{2,})/i);
+  if (wwwMatch) {
+    const rawHost = wwwMatch[1].replace(/^www\./, "");
+    const parts = rawHost.split(".");
+    const ext = parts[parts.length - 1];
+    if (!NON_DOMAIN_FILE_EXTENSIONS.has(ext)) {
+      return rawHost;
+    }
+  }
+
+  // 4. Standalone domain or domain with path: paypal.com or paypal.com/login
+  const domainCandidateMatch = text.match(/^([a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,})(?:\/.*)?$/i);
+  if (domainCandidateMatch) {
+    const candidate = domainCandidateMatch[1].replace(/^www\./, "");
+    const parts = candidate.split(".");
+    const ext = parts[parts.length - 1];
+    if (NON_DOMAIN_FILE_EXTENSIONS.has(ext)) {
+      return null;
+    }
+    return candidate;
+  }
+
+  return null;
+}
+
 /**
  * High-precision anchor text mismatch check:
  * Only triggers if anchor text explicitly pretends to be a full URL/domain
- * AND the target is NOT an internal first-party navigation.
+ * AND the target is NOT an internal first-party navigation or legitimate file download.
  */
 function checkAnchorTextMismatch(anchorText, parsedUrl, currentHost) {
   if (!anchorText || !parsedUrl) return { isMismatch: false, reason: "" };
 
-  const text = anchorText.trim().toLowerCase();
-
-  // MUST look like an explicit URL / domain claim
-  const isExplicitUrl =
-    text.startsWith("http://") ||
-    text.startsWith("https://") ||
-    text.startsWith("www.") ||
-    /^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(text);
-
-  if (!isExplicitUrl) {
+  const displayedDomain = extractClaimedDomain(anchorText, parsedUrl);
+  if (!displayedDomain) {
     return { isMismatch: false, reason: "" };
   }
 
-  const match = text.match(/(?:https?:\/\/)?(?:www\.)?([a-z0-9.-]+\.[a-z]{2,})/i);
-  if (!match) return { isMismatch: false, reason: "" };
-
-  const displayedDomain = match[1].toLowerCase().replace(/^www\./, "");
   const actualHost = parsedUrl.hostname ? parsedUrl.hostname.toLowerCase().replace(/^www\./, "") : "";
 
   if (isSameSiteOrSubdomain(actualHost, currentHost)) {

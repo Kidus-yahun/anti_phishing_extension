@@ -27,6 +27,81 @@ IMPERSONATION_KEYWORDS = [
     "system alert", "customer support", "fraud department", "ceo request"
 ]
 
+NON_DOMAIN_FILE_EXTENSIONS = {
+    # Windows & PC executables & installers
+    "exe", "msi", "bat", "cmd", "scr", "pif", "bin", "run", "gadget",
+    "dmg", "pkg", "deb", "rpm", "apk", "apks", "xapk", "aab", "ipa", "msix", "appx", "appimage",
+    # Archives & compressed files
+    "zip", "7z", "rar", "tar", "gz", "tgz", "bz2", "tbz2", "xz", "txz", "lz", "lzma", "zst", "tzst",
+    "iso", "img", "vmdk", "vdi", "qcow2", "vhd", "toast",
+    # Documents & spreadsheets
+    "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf", "txt", "csv", "tsv",
+    # Media (audio, video, images)
+    "png", "jpg", "jpeg", "gif", "bmp", "svg", "webp", "ico", "tif", "tiff", "psd", "raw",
+    # Audio & video
+    "mp3", "wav", "flac", "aac", "ogg", "m4a", "wma", "mid", "midi",
+    "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "m4v", "3gp",
+    # Code & scripts
+    "py", "pyw", "js", "mjs", "cjs", "ts", "rb", "php", "java", "cpp", "cxx", "hpp", "cs",
+    "sh", "bash", "zsh", "fish", "ps1", "psm1", "json", "xml", "yaml", "yml", "toml", "ini", "cfg", "conf", "log", "md", "markdown",
+    # Libraries & distributions
+    "jar", "war", "ear", "whl", "egg", "gem", "node", "dylib", "dll",
+    # Signatures & torrents
+    "sig", "asc", "sha256", "sha512", "md5", "torrent", "patch", "diff"
+}
+
+def extract_claimed_domain(anchor_text: str, parsed_url=None) -> Optional[str]:
+    """
+    Extract genuine domain claims from anchor text while excluding file downloads,
+    version releases, and non-domain labels.
+    """
+    if not anchor_text:
+        return None
+    text = anchor_text.strip().lower()
+    if not text:
+        return None
+
+    # 1. If anchor text matches the destination file name or URL path ending, it's a file download link
+    if parsed_url and parsed_url.path:
+        path_lower = parsed_url.path.lower()
+        parts = [p for p in path_lower.split("/") if p]
+        filename = parts[-1] if parts else ""
+        if filename and (text == filename or path_lower.endswith("/" + text) or text.endswith(filename)):
+            return None
+
+    # 2. Explicit URL scheme: https://... or http://...
+    url_match = re.search(r"(?:^|\s)https?://([a-z0-9.-]+)", text)
+    if url_match:
+        raw_host = re.sub(r"^www\.", "", url_match.group(1))
+        parts = raw_host.split(".")
+        ext = parts[-1] if len(parts) > 1 else ""
+        if ext not in NON_DOMAIN_FILE_EXTENSIONS:
+            return raw_host
+
+    # 3. Explicit www. prefix: www.google.com
+    www_match = re.search(r"(?:^|\s)www\.([a-z0-9.-]+\.[a-z]{2,})", text)
+    if www_match:
+        raw_host = re.sub(r"^www\.", "", www_match.group(1))
+        parts = raw_host.split(".")
+        ext = parts[-1] if len(parts) > 1 else ""
+        if ext not in NON_DOMAIN_FILE_EXTENSIONS:
+            return raw_host
+
+    # 4. Standalone domain or domain with path: paypal.com or paypal.com/login
+    domain_candidate_match = re.match(
+        r"^([a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,})(?:/.*)?$",
+        text
+    )
+    if domain_candidate_match:
+        candidate = re.sub(r"^www\.", "", domain_candidate_match.group(1))
+        parts = candidate.split(".")
+        ext = parts[-1] if len(parts) > 1 else ""
+        if ext in NON_DOMAIN_FILE_EXTENSIONS:
+            return None
+        return candidate
+
+    return None
+
 
 class NLPEngine:
     """
@@ -331,22 +406,19 @@ class NLPEngine:
 
         # Deceptive anchor text mismatch (e.g. text claims google.com but href goes to attacker.com)
         if anchor_text:
-            text_clean = anchor_text.strip().lower()
-            m = re.search(r"(?:https?://)?(?:www\.)?([a-z0-9.-]+\.[a-z]{2,})", text_clean)
-            if m:
-                displayed_domain = m.group(1).replace("www.", "")
-                actual_host = re.sub(r"^www\.", "", host)
-                if displayed_domain and actual_host and displayed_domain != actual_host and not actual_host.endswith("." + displayed_domain):
-                    res = {
-                        "is_phishing": True,
-                        "score": 80.0,
-                        "confidence": 0.90,
-                        "flags": [f"Deceptive link: Display text claims '{displayed_domain}' but link points to '{actual_host}'."],
-                        "reason": f"Deceptive link mismatch: Claiming '{displayed_domain}' while directing to '{actual_host}'.",
-                        "model_used": "Anchor Mismatch Guardrail"
-                    }
-                    self._url_cache[cache_key] = res
-                    return res
+            displayed_domain = extract_claimed_domain(anchor_text, parsed)
+            actual_host = re.sub(r"^www\.", "", host)
+            if displayed_domain and actual_host and displayed_domain != actual_host and not actual_host.endswith("." + displayed_domain):
+                res = {
+                    "is_phishing": True,
+                    "score": 80.0,
+                    "confidence": 0.90,
+                    "flags": [f"Deceptive link: Display text claims '{displayed_domain}' but link points to '{actual_host}'."],
+                    "reason": f"Deceptive link mismatch: Claiming '{displayed_domain}' while directing to '{actual_host}'.",
+                    "model_used": "Anchor Mismatch Guardrail"
+                }
+                self._url_cache[cache_key] = res
+                return res
 
         # 2. Deceptive typosquatting / combosquatting check
         from app.core.url_analyzer import URLAnalyzer
