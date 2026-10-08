@@ -3,164 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PhishShield AI - Threat Detection Platform</title>
-  <link rel="stylesheet" href="dashboard.css">
+  <title>PhishShield AI — Adversarial Threat Ingestion & Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/extension/dashboard.css">
 </head>
 <body>
 
-  <!-- Navbar -->
-  <header class="navbar">
-    <div class="navbar-container">
-      <div class="brand">
-        <div class="brand-icon">🛡️</div>
-        <div>
-          <h1 class="brand-title">PhishShield <span class="accent">AI</span></h1>
-          <p class="brand-subtitle">Social Engineering & Multi-Vector Threat Analysis</p>
-        </div>
+  <!-- Top System Ticker -->
+  <div class="system-ticker">
+    <div class="system-ticker-left">
+      <span>SYS // PHISHSHIELD FORENSIC DISPATCH</span>
+      <span>•</span>
+      <span class="system-badge-live">
+        <span class="status-dot-pulse"></span> LOCAL MODEL ENGINE
+      </span>
+      <span>•</span>
+      <span>ZERO REMOTE TELEMETRY</span>
+    </div>
+    <div class="system-ticker-right">
+      <span>COORD: 38.89°N // 77.03°W</span>
+      <span>EDITION: 1.0.4-PROD</span>
+    </div>
+  </div>
+
+  <!-- Editorial Masthead -->
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="masthead-branding">
+        <div class="masthead-kicker">Autonomous Cyber Threat Intelligence</div>
+        <h1 class="masthead-title">PhishShield<em>AI</em><span class="vermilion-dot">.</span></h1>
+        <p class="masthead-desc">
+          High-precision forensic triage for deceptive hyperlinks, homoglyphic lookalikes, and social engineering coercion payloads.
+        </p>
       </div>
-      <div class="nav-actions">
-        <a id="nav-test-lab" href="test_lab.html" class="nav-btn">
-          <span>🧪</span> Threat Test Lab
+      <div class="masthead-actions">
+        <a id="nav-test-lab" href="/test-lab" class="action-link-btn">
+          <span>🧪</span> Live Threat Lab ↳
         </a>
-        <span id="ai-model-badge" class="status-pill">
-          <span id="ai-status-dot" class="status-dot pulse"></span>
-          <span id="ai-model-text">Checking Engine Status...</span>
-        </span>
+        <div id="ai-model-badge" class="engine-telemetry-badge">
+          <span id="ai-status-dot" class="status-dot active"></span>
+          <span id="ai-model-text">Calibrating Model...</span>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="main-content">
-    
-    <!-- Input Column (Left) -->
-    <div class="column">
-      
-      <!-- Quick Presets -->
-      <div class="glass-panel presets-card">
-        <span class="presets-label">Test Presets:</span>
-        <button type="button" class="btn-preset btn-preset-purple" data-preset="laya_stealth">
-          <span>🧠</span> Laya Stealth Phish
+  <!-- Dossier Preset Selector -->
+  <section class="presets-toolbar">
+    <div class="presets-inner">
+      <span class="presets-title-tag">PRESET DOSSIERS:</span>
+      <div class="presets-grid-row">
+        <button type="button" class="btn-preset" data-preset="laya_stealth">
+          <span class="preset-idx">[01]</span>
+          <span>STEALTH SSO RECONCILIATION</span>
         </button>
-        <button type="button" class="btn-preset btn-preset-red" data-preset="phishing">
-          <span>⚠️</span> Urgent PayPal Phish
+        <button type="button" class="btn-preset" data-preset="phishing">
+          <span class="preset-idx">[02]</span>
+          <span>URGENT PAYPAL COERCION</span>
         </button>
-        <button type="button" class="btn-preset btn-preset-amber" data-preset="homograph">
-          <span>🔗</span> Spoofed URL
+        <button type="button" class="btn-preset" data-preset="homograph">
+          <span class="preset-idx">[03]</span>
+          <span>APPLE ID COMBOSQUAT</span>
         </button>
-        <button type="button" class="btn-preset btn-preset-green" data-preset="safe">
-          <span>✅</span> Legitimate Email
+        <button type="button" class="btn-preset" data-preset="safe">
+          <span class="preset-idx">[04]</span>
+          <span>VERIFIED GITHUB NOTICE</span>
         </button>
       </div>
-
-      <!-- Threat Scanner Inputs Card -->
-      <div class="glass-panel scanner-card">
-        <h2 class="card-title">
-          <span>🔬</span> Threat Scanner Inputs
-        </h2>
-
-        <form id="analyze-form">
-          <!-- Text / Body input -->
-          <div class="form-group">
-            <label class="form-label" for="input-text">
-              Email / Message Body (NLP Urgency & Social Engineering Analysis)
-            </label>
-            <textarea id="input-text" rows="5" class="form-textarea" placeholder="Paste suspicious email text, notification body, or message here..."></textarea>
-          </div>
-
-          <!-- URL input -->
-          <div class="form-group">
-            <label class="form-label" for="input-url">
-              Embedded Link / Target URL (Autonomous Domain & Spoofing Inspection)
-            </label>
-            <input type="text" id="input-url" class="form-input" placeholder="e.g. http://paypa1-security-verification.xyz/login.php">
-          </div>
-
-          <!-- Email Headers input -->
-          <div class="form-group">
-            <label class="form-label" for="input-header">
-              Raw Email Headers (Optional - SPF/DKIM/From Mismatch)
-            </label>
-            <textarea id="input-header" rows="3" class="form-textarea code" placeholder="From: Paypal Support <attacker@random.com>&#10;Return-Path: <bounce@unrelated.com>&#10;Authentication-Results: spf=fail dkim=fail"></textarea>
-          </div>
-
-          <!-- Action Button -->
-          <button type="submit" id="btn-submit" class="btn-submit">
-            <span>⚡</span> Analyze Threat Vectors
-          </button>
-        </form>
-      </div>
-
     </div>
+  </section>
 
-    <!-- Output Column (Right) -->
-    <div class="column">
-      
-      <!-- Result Overview Card -->
-      <div id="result-card" class="glass-panel results-card">
+  <!-- Main Asymmetric Workspace -->
+  <main class="main-workspace">
+    <div class="workspace-layout">
+
+      <!-- Left Column: Adversarial Intake Console (58%) -->
+      <section class="editorial-panel">
+        <div class="panel-header-strip">
+          <span class="panel-tag-code">INPUT_CONSOLE // VECTOR_INTAKE</span>
+          <span class="panel-tag-meta">SCHEMA: MULTI-PARAM-RFC</span>
+        </div>
+        <div class="panel-body">
+          <form id="analyze-form">
+            <!-- Text / Body Vector -->
+            <div class="field-group">
+              <div class="field-label-row">
+                <label class="field-label" for="input-text">
+                  [01] LINGUISTIC PAYLOAD &amp; URGENCY BODY
+                </label>
+                <span class="field-sub">NLP Manipulation &amp; Panic Trigger Scan</span>
+              </div>
+              <textarea id="input-text" rows="5" class="form-textarea" placeholder="Paste incoming email body, SMS notification, or social engineering script here..."></textarea>
+            </div>
+
+            <!-- URL Vector -->
+            <div class="field-group">
+              <div class="field-label-row">
+                <label class="field-label" for="input-url">
+                  [02] TARGET DESTINATION URI
+                </label>
+                <span class="field-sub">Autonomous IDN, Anchor &amp; Combosquat Inspection</span>
+              </div>
+              <input type="text" id="input-url" class="form-input" placeholder="e.g. http://paypa1-security-verification.xyz/login.php">
+            </div>
+
+            <!-- Email Headers Vector -->
+            <div class="field-group">
+              <div class="field-label-row">
+                <label class="field-label" for="input-header">
+                  [03] RFC 5322 HEADERS (OPTIONAL)
+                </label>
+                <span class="field-sub">SPF / DKIM Cryptographic Alignment</span>
+              </div>
+              <textarea id="input-header" rows="3" class="form-textarea code" placeholder="From: Paypal Support &lt;service@paypal.notice-center.com&gt;&#10;Return-Path: &lt;bounce@suspicious-mailer.net&gt;&#10;Authentication-Results: spf=softfail dkim=fail"></textarea>
+            </div>
+
+            <!-- Action Trigger -->
+            <button type="submit" id="btn-submit" class="btn-submit">
+              <span>⚡</span> EXECUTE MULTI-VECTOR TRIAGE ↳
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Right Column: Forensic Results Dossier (42%) -->
+      <section id="result-card" class="results-dossier">
         
-        <!-- Initial Blank State -->
+        <!-- Standby State -->
         <div id="initial-state" class="state-container">
-          <div class="empty-icon">🛡️</div>
-          <p class="empty-text">Ready to inspect suspicious links, emails, or headers.</p>
-          <p class="empty-subtext">Select a test preset or paste custom content to evaluate risk.</p>
+          <div class="standby-graphic">§</div>
+          <h2 class="standby-heading">Dossier Standby</h2>
+          <p class="standby-desc">
+            Awaiting adversarial vectors. Populate the intake console or trigger an index preset to run forensic triage.
+          </p>
+          <div class="standby-meta-coord">STATUS: READY • INFERENCE LATENCY: &lt;12MS</div>
         </div>
 
         <!-- Loading State -->
         <div id="loading-state" class="state-container hidden">
-          <div class="spinner"></div>
-          <p class="empty-text">Analyzing NLP patterns, domain heuristics & headers...</p>
+          <div class="loading-box">
+            <div class="terminal-spinner"></div>
+            <p class="loading-text">Triaging Linguistic, Domain &amp; Cryptographic Vectors...</p>
+          </div>
         </div>
 
-        <!-- Analysis Output -->
-        <div id="analysis-output" class="state-container hidden" style="padding: 0;">
+        <!-- Output State -->
+        <div id="analysis-output" class="state-container output-layout hidden">
           
-          <!-- Gauge / Circle -->
-          <div class="gauge-wrapper">
-            <svg class="gauge-svg" viewBox="0 0 160 160">
-              <circle class="gauge-bg" cx="80" cy="80" r="70" />
-              <circle id="gauge-bar" class="gauge-bar" cx="80" cy="80" r="70" />
-            </svg>
-            <div class="gauge-center-content">
-              <span id="out-score" class="score-value">0%</span>
-              <span class="score-label">Threat Score</span>
+          <!-- Dossier Header Strip -->
+          <div class="dossier-meta-bar">
+            <span class="panel-tag-code">FORENSIC_VERDICT // DOSSIER #8491</span>
+            <div id="engine-mode-tag" class="engine-source-pill">
+              ⚡ Engine: Standalone Local Client Engine
             </div>
           </div>
 
-          <div id="out-badge" class="risk-badge">SAFE</div>
-          <p id="out-verdict" class="verdict-text"></p>
-          
-          <div id="engine-mode-tag" class="engine-source-pill">
-            ⚡ Engine: Standalone Local Client Engine
+          <!-- Exposure Summary Block (Gauge + Numerical Metric) -->
+          <div class="exposure-summary-block">
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 160 160">
+                <circle class="gauge-bg" cx="80" cy="80" r="70" />
+                <circle id="gauge-bar" class="gauge-bar" cx="80" cy="80" r="70" />
+              </svg>
+              <div class="gauge-center-content">
+                <span id="out-score" class="score-value">0%</span>
+                <span class="score-label">Risk Index</span>
+              </div>
+            </div>
+            <div class="exposure-details">
+              <div id="out-badge" class="risk-badge">SAFE</div>
+              <p id="out-verdict" class="verdict-text"></p>
+            </div>
           </div>
 
-          <!-- Flags Container -->
+          <!-- Forensic Evidence Ledger -->
           <div class="flags-section">
             <div class="flags-header">
-              <span class="flags-title">Threat Indicators</span>
-              <span id="flag-count" class="flags-count">0 flags detected</span>
+              <span class="flags-title">Forensic Evidence Ledger</span>
+              <span id="flag-count" class="flags-count">0 indicators identified</span>
             </div>
             <div id="out-flags" class="flags-list"></div>
           </div>
 
         </div>
 
-      </div>
+      </section>
 
     </div>
-
   </main>
 
-  <!-- Extension Stats Footer -->
-  <footer class="extension-stats-bar">
-    <div>
-      🛡️ PhishShield AI Browser Extension • Protected Tabs: <strong id="stat-total-blocked" style="color: #60a5fa;">0</strong> Threats Blocked All-Time
-    </div>
-    <div>
-      v1.0.0 • Client-Side Autonomous Protection
+  <!-- Editorial Archival Footer -->
+  <footer class="editorial-footer">
+    <div class="editorial-footer-inner">
+      <div>
+        🛡️ <strong>PhishShield AI</strong> • All-Time Interceptions: <strong id="stat-total-blocked">0</strong> Threats
+      </div>
+      <div>
+        Licensed under <a href="/LICENSE" class="license-link">AGPL-3.0</a> • Local Offline Autonomous Engine
+      </div>
     </div>
   </footer>
 
-  <script src="dashboard.js"></script>
+  <script src="/extension/dashboard.js"></script>
 </body>
 </html>
