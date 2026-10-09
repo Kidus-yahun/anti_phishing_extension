@@ -77,11 +77,12 @@ PhishShield AI already exists and works: a Manifest V3 extension, a local FastAP
 - Targets **languages & users the market ignores** — open internet means open to all languages.
 - AGPL-3.0 guarantees derivatives stay free.
 
-## 8. Open questions before submitting
+## 8. Finalized Submission Checklist
 
-- [ ] Does Restack or CodeSupply fit better? (both open under Nov 3 deadline; decide by Oct 5)
-- [ ] Office hour Sep 30: ask about European-dimension expectations for individual applicants outside Europe — *already addressed via NGI-vision route*
-- [ ] Confirm payout mechanics for an individual in Ethiopia (bank transfer details appear only after a proposal is accepted)
-- [ ] Register + test the proposal portal early — **don't wait until Nov 3**
+- [x] **Call selected:** **NGI Zero Restack** (Trust-enhancing technologies, offline client-side privacy, user sovereignty).
+- [x] **European Dimension finalized:** NGI-vision (privacy & anti-phishing standard) + EU dissemination (FOSDEM) + Open Collective Europe fiscal bridge.
+- [x] **License verified:** AGPL-3.0 in repository.
+- [x] **Budget set:** €15,300 across 5 clear deliverables (D1–D5).
+- [x] **Submit on portal:** **Submitted successfully on October 9, 2026!** (Confirmation: `request-submit.cgi`). Awaiting review after Nov 3 deadline.
 
 ---
