@@ -10,6 +10,30 @@
 ![Chrome Extension](https://img.shields.io/badge/Chrome_Extension-Manifest_V3-red)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Glassmorphic%20UI-06B6D4)
 
+<br/>
+
+<div align="center">
+  <img src="docs/assets/extension_preview.jpg" alt="PhishShield AI Browser Guardian in Action" width="100%" style="max-width: 860px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);" />
+  <p><em>Real-time in-browser protection: PhishShield AI actively flags Cyrillic homograph attacks, inserts high-visibility warning badges, and intercepts clicks before malicious payloads or credential harvesting forms can open.</em></p>
+</div>
+
+---
+
+## 🚨 The Critical Real-World Problem: Why PhishShield AI Matters
+
+Phishing remains the **#1 initial attack vector** responsible for over 80% of reported security breaches globally, resulting in billions of dollars in losses annually. Despite regular security awareness training, individuals and organizations continue to get compromised because modern cyberattacks exploit human psychology and subtle browser mimicry that bypass traditional defenses.
+
+Here is why existing defenses fall short and why **PhishShield AI** is urgently needed:
+
+| Real-World Problem | The Vulnerability / Failure of Existing Tools | How PhishShield AI Solves It |
+| :--- | :--- | :--- |
+| **Zero-Hour Phishing Blindspot** | Standard browser protections (Google Safe Browsing, Microsoft SmartScreen) rely on static, centralized blacklists. Disposable phishing domains harvest credentials and disappear within the first **20–60 minutes**—hours or days before blacklists ever index them. | **Zero-Latency Client-Side Inspection**: Proactively inspects DOM links and attributes in real-time, executing client-side heuristics and sub-500ms AI decisions directly in the tab before navigation. |
+| **Invisible Homograph & IDN Spoofing** | Attackers substitute Latin characters with visually indistinguishable Cyrillic or Unicode lookalikes (e.g. `pаypal.com` with Cyrillic `а`). To the human eye, the link looks 100% authentic. | **Automated Homograph & Punycode Deobfuscation**: Decodes Unicode strings, flags deceptive character sets, and visually highlights spoofed brands before the user can interact. |
+| **Deceptive Anchor Discrepancies** | Phishing emails and social media posts display legitimate URLs as the visible text (e.g. `<a href="https://evil-harvest.top">https://paypal.com</a>`). Users click what they see and get compromised. | **DOM-Level Anchor vs Target Verification**: Continuously observes the DOM with `MutationObserver`, comparing displayed label text against real destination `href` attributes, flagging intentional mismatches. |
+| **Psychological Urgency & Coercion** | Social engineering attacks exploit panic and artificial urgency ("Account suspended in 2 hours!", "Unauthorized transfer detected"). Panicked users bypass their usual caution. | **Sub-Second NLP Semantic Analysis**: Powered by the **Laya System-1 Decision Engine** (ModernBERT) and offline ML classifiers to flag linguistic pressure tactics, credential harvest cues, and fake authority. |
+| **Passive Warnings vs Active Interception** | Traditional browsers display tiny padlock indicators or subtle address bar icons that users regularly overlook. | **Active Pre-Click Interception**: Injects pulsing red badges (`⚠️ PHISHING LINK: DO NOT TOUCH`) directly into the page and completely intercepts clicks with a full-screen warning modal and a 1-click **"Stay Safe"** escape. |
+| **Underserved Multilingual Regions** | Most commercial cybersecurity tools are built exclusively for English and Western European languages, leaving African and regional languages (e.g. Amharic, Oromo) completely unprotected. | **Inclusive Multilingual Defense**: Architected with multi-language NLP capability and an open dataset commitment to safeguard underrepresented communities. |
+
 ---
 
 ## 🌟 Key Features
@@ -66,6 +90,9 @@ PhishShield-AI/
 ├── samples/
 │   ├── phishing_sample.eml      # Sample phishing email header & text
 │   └── legitimate_sample.eml    # Sample safe email header & text
+├── docs/                        # Grant proposals, funding calendar & documentation assets
+│   ├── assets/                  # Visual assets & extension screenshots
+│   └── FUNDING_CALENDAR.md      # Milestones & grant deadlines
 ├── tests/
 │   └── test_detection.py        # Automated test suite
 ├── train_model.py               # ML training pipeline script
