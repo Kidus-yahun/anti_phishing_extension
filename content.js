@@ -22,11 +22,17 @@
   // Intercept click listener store to allow clean removal
   const interceptedLinks = new Map();
 
-  // Modern SVG Icons (Lucide-style)
+  // Modern SVG Icons (Image 2 Glassmorphism Style)
   const SVG_SHIELD_CHECK = `
-    <svg class="phishshield-svg-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      <path d="m9 12 2 2 4-4"/>
+    <svg class="phishshield-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5));">
+      <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="url(#phishshield-pill-gradient)"/>
+      <path d="m9 12 2 2 4-4" stroke="#0b1120" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs>
+        <linearGradient id="phishshield-pill-gradient" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#60a5fa"/>
+          <stop offset="1" stop-color="#4f46e5"/>
+        </linearGradient>
+      </defs>
     </svg>`;
 
   const SVG_ALERT_OCTAGON = `
@@ -111,19 +117,20 @@
       }
 
       .phishshield-pill-badge {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 9px;
         padding: 9px 18px;
         border-radius: 9999px;
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.1px;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.2px;
+        color: #e2e8f0;
         cursor: pointer;
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        backdrop-filter: blur(20px) saturate(180%);
         border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
         transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
       }
 
@@ -136,21 +143,22 @@
       }
 
       .phishshield-pill-safe {
-        background: rgba(11, 15, 25, 0.78);
-        border-color: rgba(16, 185, 129, 0.35);
-        color: #34d399;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28), 0 0 20px rgba(16, 185, 129, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.72) 0%, rgba(15, 23, 42, 0.82) 100%);
+        border-color: rgba(255, 255, 255, 0.18);
+        color: #e2e8f0;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
       }
 
       .phishshield-pill-safe:hover {
-        box-shadow: 0 10px 36px rgba(0, 0, 0, 0.35), 0 0 28px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        background: linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(30, 41, 59, 0.88) 100%);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42), 0 0 20px rgba(96, 165, 250, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.35);
       }
 
       .phishshield-pill-threat {
-        background: rgba(22, 13, 20, 0.88);
-        border-color: rgba(244, 63, 94, 0.45);
-        color: #fb7185;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 26px rgba(244, 63, 94, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        background: linear-gradient(135deg, rgba(39, 17, 26, 0.85) 0%, rgba(20, 10, 16, 0.92) 100%);
+        border-color: rgba(244, 63, 94, 0.4);
+        color: #fecdd3;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38), 0 0 24px rgba(244, 63, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
         animation: pill-pulse 2.2s infinite ease-in-out;
       }
 
@@ -657,7 +665,7 @@
 
     const badge = document.createElement("div");
     badge.className = "phishshield-pill-badge phishshield-pill-safe";
-    badge.innerHTML = `${SVG_SHIELD_CHECK}<span>PhishShield Protected</span>`;
+    badge.innerHTML = `${SVG_SHIELD_CHECK}<span>PhishShield: Protected</span>`;
 
     badge.addEventListener("click", () => {
       if (!isProtectionActive) return;
@@ -691,7 +699,7 @@
       badge.innerHTML = `${SVG_ALERT_OCTAGON}<span>${flaggedThreats.length} Phishing Link${flaggedThreats.length > 1 ? "s" : ""} Blocked</span>`;
     } else {
       badge.className = "phishshield-pill-badge phishshield-pill-safe";
-      badge.innerHTML = `${SVG_SHIELD_CHECK}<span>PhishShield Protected</span>`;
+      badge.innerHTML = `${SVG_SHIELD_CHECK}<span>PhishShield: Protected</span>`;
     }
   }
 
