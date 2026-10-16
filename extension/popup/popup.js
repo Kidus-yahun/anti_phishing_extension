@@ -1,6 +1,7 @@
 /**
  * PhishShield AI - Popup Controller Script
  * Manages instant ON/OFF toggling, live tab stats, and background ML checks.
+ * Premium Glassmorphism UI with inline SVG icons.
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -18,6 +19,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   let activeTabId = null;
   let currentThreatCount = 0;
 
+  // Modern SVG Icons (Lucide-style)
+  const ICON_SHIELD_SAFE = `
+    <svg class="status-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <path d="m9 12 2 2 4-4"/>
+    </svg>`;
+
+  const ICON_SHIELD_DANGER = `
+    <svg class="status-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>`;
+
+  const ICON_SHIELD_PAUSED = `
+    <svg class="status-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="10" y1="15" x2="10" y2="9"/>
+      <line x1="14" y1="15" x2="14" y2="9"/>
+    </svg>`;
+
   /**
    * Update visual popup state based on enabled/disabled and threat counts
    */
@@ -26,7 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!isEnabled) {
       statusCard.className = "status-card disabled";
-      statusIcon.textContent = "⏸️";
+      statusIcon.innerHTML = ICON_SHIELD_PAUSED;
       statusTitle.textContent = "Protection is Paused";
       statusSubtitle.textContent = "Real-time link scanning, warnings, and blockers are currently turned off.";
       tabThreatsCount.textContent = "0";
@@ -35,12 +57,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (threatCount > 0) {
         statusCard.className = "status-card danger";
-        statusIcon.textContent = "🛑";
+        statusIcon.innerHTML = ICON_SHIELD_DANGER;
         statusTitle.textContent = `${threatCount} Phishing Threat${threatCount > 1 ? "s" : ""} Blocked!`;
         statusSubtitle.textContent = "High-visibility warning badges were applied to dangerous links on this page.";
       } else {
         statusCard.className = "status-card safe";
-        statusIcon.textContent = "✅";
+        statusIcon.innerHTML = ICON_SHIELD_SAFE;
         statusTitle.textContent = "Current Tab is Safe";
         statusSubtitle.textContent = "No phishing links or homograph attacks detected on this page.";
       }
@@ -120,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     backendText.textContent = "Standalone Mode";
   }
 
-  // 4. Open Threat Dashboard Listener (Works 100% offline or online via extension)
+  // 4. Open Threat Dashboard Listener
   btnOpenDashboard.addEventListener("click", async () => {
     await chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
   });

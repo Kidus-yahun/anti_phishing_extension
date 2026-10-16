@@ -7,14 +7,26 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
+  <!-- Ambient Glass Mesh Glow Orbs -->
+  <div class="glass-mesh-bg" aria-hidden="true">
+    <div class="mesh-orb orb-indigo"></div>
+    <div class="mesh-orb orb-cyan"></div>
+    <div class="mesh-orb orb-rose"></div>
+  </div>
+
   <div class="popup-container">
     <!-- Header -->
     <header class="header">
       <div class="logo-area">
-        <div class="logo-icon">🛡️</div>
-        <div>
+        <div class="logo-badge">
+          <svg class="logo-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="logo-titles">
           <h1 class="logo-title">PhishShield <span class="accent">AI</span></h1>
-          <p class="logo-subtitle">Real-Time Browser Guardian</p>
+          <p class="logo-subtitle">Real-Time Threat Guardian</p>
         </div>
       </div>
       <div class="toggle-container">
@@ -25,9 +37,14 @@
       </div>
     </header>
 
-    <!-- Tab Security Status Card -->
+    <!-- Tab Security Status Glass Card -->
     <div id="status-card" class="status-card safe">
-      <div class="status-icon" id="status-icon">✅</div>
+      <div class="status-icon-wrapper" id="status-icon">
+        <svg class="status-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="m9 12 2 2 4-4"/>
+        </svg>
+      </div>
       <div class="status-details">
         <h2 class="status-title" id="status-title">Current Tab is Safe</h2>
         <p class="status-subtitle" id="status-subtitle">No phishing links or spoofed domains detected.</p>
@@ -37,22 +54,42 @@
     <!-- Quick Stats Grid -->
     <div class="stats-grid">
       <div class="stat-box">
-        <span class="stat-value" id="tab-threats-count">0</span>
+        <div class="stat-top">
+          <span class="stat-value" id="tab-threats-count">0</span>
+          <span class="stat-icon-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </span>
+        </div>
         <span class="stat-label">Blocked on Tab</span>
       </div>
+
       <div class="stat-box">
-        <span class="stat-value" id="all-time-count">0</span>
-        <span class="stat-label">
-          Total Blocked
-          <button id="btn-reset-stats" style="background: none; border: none; color: #60a5fa; cursor: pointer; font-size: 9px; margin-left: 2px;" title="Reset All-Time Counter">↺ Reset</button>
-        </span>
+        <div class="stat-top">
+          <span class="stat-value" id="all-time-count">0</span>
+          <button id="btn-reset-stats" class="btn-reset-icon" title="Reset All-Time Counter" aria-label="Reset All-Time Counter">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+              <path d="M3 21v-5h5"/>
+            </svg>
+          </button>
+        </div>
+        <span class="stat-label">Total Blocked</span>
       </div>
     </div>
 
     <!-- Threat Dashboard Action -->
     <div class="dashboard-action-card">
       <button id="btn-open-dashboard" class="btn-dashboard" title="Open Threat Detection Dashboard">
-        <span>⚡</span> Open Threat Dashboard
+        <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>Open Threat Dashboard</span>
       </button>
     </div>
 
@@ -63,13 +100,18 @@
         <span class="backend-text" id="backend-text">Checking ML engine...</span>
       </div>
       <a id="link-test-lab" href="../test_lab.html" target="_blank" class="test-lab-link" title="Open Malicious Link Test Lab">
-        🧪 Test Lab
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 2v7.31L4.65 17.6A2 2 0 0 0 6.35 21h11.3a2 2 0 0 0 1.7-3.4L14 9.31V2"/>
+          <line x1="8.5" y1="2" x2="15.5" y2="2"/>
+          <path d="M8.5 14h7"/>
+        </svg>
+        <span>Test Lab</span>
       </a>
     </div>
 
     <!-- Footer -->
     <footer class="footer">
-      <span>PhishShield AI v1.0 • Multi-Vector Defense</span>
+      <span>PhishShield AI • Multi-Vector Defense</span>
     </footer>
   </div>
 

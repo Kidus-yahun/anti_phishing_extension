@@ -1,280 +1,79 @@
 /* ==========================================================================
-   PhishShield AI - Premium Content Security Styles
-   High-Visibility Inline Badges, Interception Modal & Floating Cyber Pill
+   PhishShield AI - Webpage DOM Threat Styles
+   Scoped styles for flagged links and inline warning badges
+   (Modal and Floating Pill are encapsulated inside Shadow DOM)
    ========================================================================== */
 
 /* 1. Flagged Phishing Link Highlighting */
 a.phishshield-flagged-link {
-  outline: 2px dashed #f43f5e !important;
+  outline: 2px dashed rgba(244, 63, 94, 0.85) !important;
   outline-offset: 3px !important;
-  background: rgba(244, 63, 94, 0.16) !important;
+  background: rgba(244, 63, 94, 0.14) !important;
   color: #fb7185 !important;
   text-decoration: line-through !important;
   cursor: not-allowed !important;
   position: relative !important;
-  border-radius: 4px !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  box-shadow: 0 0 12px rgba(244, 63, 94, 0.35) !important;
+  border-radius: 6px !important;
+  transition: all 180ms ease !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.28) !important;
 }
 
 a.phishshield-flagged-link:hover {
-  background: rgba(244, 63, 94, 0.28) !important;
-  box-shadow: 0 0 20px rgba(244, 63, 94, 0.6) !important;
+  background: rgba(244, 63, 94, 0.24) !important;
+  box-shadow: 0 0 22px rgba(244, 63, 94, 0.5) !important;
 }
 
-/* 2. High-Visibility Inline Warning Badge */
+/* 2. Frosted Glass Inline Warning Badge */
 .phishshield-inline-badge {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%) !important;
+  background: rgba(220, 38, 38, 0.88) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
   color: #ffffff !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif !important;
   font-size: 10px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.6px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
   text-transform: uppercase !important;
-  padding: 3px 9px !important;
+  padding: 4px 10px !important;
   margin-left: 8px !important;
   margin-right: 6px !important;
-  border-radius: 20px !important;
+  border-radius: 9999px !important;
   vertical-align: middle !important;
   line-height: 1.2 !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
   user-select: none !important;
   pointer-events: auto !important;
   cursor: pointer !important;
-  animation: phishshield-radar-pulse 2s infinite ease-in-out !important;
+  animation: phishshield-radar-pulse 2.2s infinite ease-in-out !important;
   z-index: 9999 !important;
-  transition: transform 0.2s ease !important;
+  transition: transform 180ms ease, box-shadow 180ms ease !important;
 }
 
 .phishshield-inline-badge:hover {
-  transform: scale(1.06) !important;
-  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.7) !important;
+  transform: translateY(-1px) scale(1.04) !important;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
 }
 
-.phishshield-inline-badge::before {
-  content: "🛑" !important;
-  font-size: 11px !important;
+.phishshield-inline-badge:active {
+  transform: scale(0.98) !important;
+}
+
+.phishshield-badge-svg {
+  flex-shrink: 0 !important;
 }
 
 @keyframes phishshield-radar-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
   70% {
-    box-shadow: 0 0 0 9px rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
-}
-
-/* 3. Click Interception Full-Screen Warning Modal */
-#phishshield-modal-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  background-color: rgba(5, 8, 17, 0.92) !important;
-  backdrop-filter: blur(14px) saturate(180%) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 2147483647 !important;
-  padding: 24px !important;
-  box-sizing: border-box !important;
-  animation: phishshield-modal-fade 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-@keyframes phishshield-modal-fade {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-#phishshield-modal-card {
-  background: radial-gradient(circle at 50% 0%, #1e1627 0%, #0d111e 60%, #090c16 100%) !important;
-  border: 1px solid rgba(239, 68, 68, 0.5) !important;
-  border-radius: 24px !important;
-  max-width: 560px !important;
-  width: 100% !important;
-  padding: 34px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 45px rgba(239, 68, 68, 0.35) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
-  color: #f8fafc !important;
-  text-align: center !important;
-  box-sizing: border-box !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-#phishshield-modal-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #ef4444, transparent);
-}
-
-.phishshield-modal-icon {
-  font-size: 54px !important;
-  margin-bottom: 12px !important;
-  filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.5)) !important;
-  animation: phishshield-shake 0.8s ease-in-out !important;
-}
-
-@keyframes phishshield-shake {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-6deg); }
-  75% { transform: rotate(6deg); }
-}
-
-.phishshield-modal-title {
-  font-size: 20px !important;
-  font-weight: 900 !important;
-  letter-spacing: -0.4px !important;
-  color: #ffffff !important;
-  margin-bottom: 10px !important;
-  text-transform: uppercase !important;
-}
-
-.phishshield-modal-desc {
-  font-size: 13px !important;
-  color: #94a3b8 !important;
-  line-height: 1.5 !important;
-  margin-bottom: 20px !important;
-}
-
-.phishshield-url-box {
-  background: #060913 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 12px !important;
-  padding: 12px 14px !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
-  font-size: 12px !important;
-  color: #f87171 !important;
-  word-break: break-all !important;
-  margin-bottom: 18px !important;
-  text-align: left !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-}
-
-.phishshield-reasons-list {
-  list-style: none !important;
-  padding: 0 !important;
-  margin: 0 0 24px 0 !important;
-  text-align: left !important;
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
-}
-
-.phishshield-reasons-list li {
-  background: rgba(239, 68, 68, 0.1) !important;
-  border: 1px solid rgba(239, 68, 68, 0.25) !important;
-  border-radius: 10px !important;
-  padding: 8px 12px !important;
-  font-size: 12px !important;
-  color: #fca5a5 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-
-.phishshield-modal-actions {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-}
-
-.phishshield-btn-safe {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(16, 185, 129, 0.5) !important;
-  padding: 14px 24px !important;
-  font-size: 14px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.2px !important;
-  border-radius: 14px !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 10px !important;
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.phishshield-btn-safe:hover {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6) !important;
-  transform: translateY(-1px) !important;
-}
-
-.phishshield-btn-unsafe {
-  background: transparent !important;
-  color: #64748b !important;
-  border: none !important;
-  padding: 6px !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  text-decoration: underline !important;
-  transition: color 0.2s ease !important;
-}
-
-.phishshield-btn-unsafe:hover {
-  color: #f87171 !important;
-}
-
-/* 4. Grammarly-Style Floating Security Pill */
-#phishshield-floating-pill {
-  position: fixed !important;
-  bottom: 24px !important;
-  right: 24px !important;
-  z-index: 2147483640 !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif !important;
-  user-select: none !important;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.phishshield-pill-badge {
-  display: flex !important;
-  align-items: center !important;
-  gap: 9px !important;
-  padding: 9px 18px !important;
-  border-radius: 30px !important;
-  font-size: 12px !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.2px !important;
-  cursor: pointer !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45) !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.phishshield-pill-badge:hover {
-  transform: scale(1.06) translateY(-2px) !important;
-}
-
-/* Safe State */
-.phishshield-pill-safe {
-  background: rgba(9, 14, 26, 0.88) !important;
-  border: 1px solid rgba(16, 185, 129, 0.45) !important;
-  color: #34d399 !important;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2) !important;
-}
-
-/* Threat State */
-.phishshield-pill-threat {
-  background: rgba(15, 10, 20, 0.95) !important;
-  border: 1.5px solid rgba(239, 68, 68, 0.7) !important;
-  color: #f87171 !important;
-  box-shadow: 0 4px 24px rgba(239, 68, 68, 0.35) !important;
-  animation: phishshield-radar-pulse 2.2s infinite ease-in-out !important;
 }
