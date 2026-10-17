@@ -1,0 +1,138 @@
+{
+  "appName": {
+    "message": "ፊሽሺልድ AI - የእውነተኛ ጊዜ የፊሺንግ ጥበቃ",
+    "description": "Name of the extension in Amharic"
+  },
+  "appDesc": {
+    "message": "አደገኛ የማጭበርበሪያ ድረ-ገጾችን፣ የኢትዮጵያ ባንኮችን እና የቴሌብር አስመሳይ አድራሻዎችን በእውነተኛ ጊዜ የሚከላከል ዘመናዊ የደህንነት ስርዓት።",
+    "description": "Description of the extension in Amharic"
+  },
+  "actionTitle": {
+    "message": "ፊሽሺልድ AI ጠባቂ",
+    "description": "Toolbar button tooltip in Amharic"
+  },
+  "statusSafeTitle": {
+    "message": "የአሁኑ ገጽ ደህንነቱ የተጠበቀ ነው",
+    "description": "Title when page has no threats in Amharic"
+  },
+  "statusSafeDesc": {
+    "message": "ምንም ዓይነት የፊሺንግ ወይም የተጭበረበረ አድራሻ አልተገኘም።",
+    "description": "Subtitle when page is safe in Amharic"
+  },
+  "statusSuspiciousTitle": {
+    "message": "አጠራጣሪ እንቅስቃሴ ተገኝቷል",
+    "description": "Title when page has warnings in Amharic"
+  },
+  "statusSuspiciousDesc": {
+    "message": "በዚህ ገጽ ላይ አጠራጣሪ ወይም ያልተረጋገጡ አገናኞች ተገኝተዋል።",
+    "description": "Subtitle when page is suspicious in Amharic"
+  },
+  "statusDangerousTitle": {
+    "message": "አደገኛ አደጋ ተከስቷል!",
+    "description": "Title when page has phishing or malicious elements in Amharic"
+  },
+  "statusDangerousDesc": {
+    "message": "ከፍተኛ አደጋ ያለው የማጭበርበሪያ ወይም የይለፍ ቃል ሌብነት ሙከራ ተገኝቷል።",
+    "description": "Subtitle when page is dangerous in Amharic"
+  },
+  "statusPausedTitle": {
+    "message": "ጥበቃው ለጊዜው ቆሟል",
+    "description": "Title when protection is disabled in Amharic"
+  },
+  "statusPausedDesc": {
+    "message": "የእውነተኛ ጊዜ አገናኝ ምርመራ እና ማስጠንቀቂያዎች ጠፍተዋል።",
+    "description": "Subtitle when protection is paused in Amharic"
+  },
+  "statSitesChecked": {
+    "message": "የተመረመሩ ገጾች",
+    "description": "Label for sites checked counter in Amharic"
+  },
+  "statThreatsBlocked": {
+    "message": "የተከለከሉ አደጋዎች",
+    "description": "Label for threats blocked counter in Amharic"
+  },
+  "statBlockedOnTab": {
+    "message": "በዚህ ገጽ የተከለከሉ",
+    "description": "Label for threats on current tab in Amharic"
+  },
+  "statTotalBlocked": {
+    "message": "በአጠቃላይ የተከለከሉ",
+    "description": "Label for all-time blocked threats in Amharic"
+  },
+  "whyFlagged": {
+    "message": "ይህ ገጽ ለምን ተጠረጠረ?",
+    "description": "Header for detection reasons in Amharic"
+  },
+  "whySafe": {
+    "message": "ይህ ገጽ ለምን አስተማማኝ ሆነ?",
+    "description": "Header for safe explanation in Amharic"
+  },
+  "noThreatsFound": {
+    "message": "ሁሉም የተፈተሹ አገናኞች እና የገጹ አወቃቀሮች ደህንነታቸው የተጠበቀ ነው።",
+    "description": "Explanation when page is clean in Amharic"
+  },
+  "overlayTitleDanger": {
+    "message": "የደህንነት ማስጠንቀቂያ፡ አደገኛ የማጭበርበሪያ ድረ-ገጽ ተገኝቷል",
+    "description": "Heading for dangerous page overlay in Amharic"
+  },
+  "overlayTitleWarning": {
+    "message": "ጥንቃቄ፡ አጠራጣሪ ድረ-ገጽ ተገኝቷል",
+    "description": "Heading for suspicious page overlay in Amharic"
+  },
+  "overlayDesc": {
+    "message": "ይህ ድረ-ገጽ የባንክ ሚስጥር ቁጥሮችን፣ የቴሌብር ፒን ወይም የግል መረጃዎችን ለመስረቅ የተዘጋጀ አደገኛ የማጭበርበሪያ ገጽ መሆኑን ፊሽሺልድ AI ደርሶበታል።",
+    "description": "Description for injected overlay in Amharic"
+  },
+  "btnGoBack": {
+    "message": "ወደ ኋላ ተመለስ (ይመከራል)",
+    "description": "Button to navigate away in Amharic"
+  },
+  "btnProceedAnyway": {
+    "message": "አደጋውን አውቃለሁ፣ ቀጥል (አደገኛ)",
+    "description": "Button to bypass warning in Amharic"
+  },
+  "btnTrustSite": {
+    "message": "ይህንን ድረ-ገጽ እመነው",
+    "description": "Button to add domain to trusted list in Amharic"
+  },
+  "siteTrustedNotice": {
+    "message": "ይህ ድረ-ገጽ ወደ ታማኝ ድረ-ገጾች ዝርዝርዎ ውስጥ ገብቷል።",
+    "description": "Notification when trusted in Amharic"
+  },
+  "tooltipDestination": {
+    "message": "ትክክለኛ መድረሻ:",
+    "description": "Tooltip label for destination domain in Amharic"
+  },
+  "tooltipExpandsTo": {
+    "message": "የሚያመራው ወደ:",
+    "description": "Tooltip label for expanded shortlink in Amharic"
+  },
+  "tooltipStatusSafe": {
+    "message": "አስተማማኝ መድረሻ",
+    "description": "Tooltip status badge for safe links in Amharic"
+  },
+  "tooltipStatusSuspicious": {
+    "message": "አጠራጣሪ አገናኝ",
+    "description": "Tooltip status badge for suspicious links in Amharic"
+  },
+  "tooltipStatusDangerous": {
+    "message": "አደገኛ የማጭበርበሪያ አገናኝ",
+    "description": "Tooltip status badge for dangerous links in Amharic"
+  },
+  "badgePhishing": {
+    "message": "የማጭበርበሪያ አገናኝ፡ አይንኩት",
+    "description": "Inline badge for phishing links in Amharic"
+  },
+  "openDashboard": {
+    "message": "የደህንነት ዳሽቦርድ ክፈት",
+    "description": "Button to open dashboard in Amharic"
+  },
+  "testLab": {
+    "message": "የሙከራ ላብ",
+    "description": "Link to test lab in Amharic"
+  },
+  "langToggle": {
+    "message": "English",
+    "description": "Language toggle label in Amharic"
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "appName": {
+    "message": "PhishShield AI - Real-Time Phishing Protection",
+    "description": "Name of the extension"
+  },
+  "appDesc": {
+    "message": "Real-time browser guardian detecting phishing links, Ethiopian bank lookalikes, homograph attacks, and credential scams.",
+    "description": "Description of the extension"
+  },
+  "actionTitle": {
+    "message": "PhishShield AI Guardian",
+    "description": "Toolbar button tooltip"
+  },
+  "statusSafeTitle": {
+    "message": "Current Tab is Safe",
+    "description": "Title when page has no threats"
+  },
+  "statusSafeDesc": {
+    "message": "No phishing links, homographs, or credential harvesting detected.",
+    "description": "Subtitle when page is safe"
+  },
+  "statusSuspiciousTitle": {
+    "message": "Suspicious Activity Detected",
+    "description": "Title when page has warnings"
+  },
+  "statusSuspiciousDesc": {
+    "message": "Potential risk indicators or unverified links found on this page.",
+    "description": "Subtitle when page is suspicious"
+  },
+  "statusDangerousTitle": {
+    "message": "Dangerous Threat Blocked!",
+    "description": "Title when page has phishing or malicious elements"
+  },
+  "statusDangerousDesc": {
+    "message": "High-risk phishing, brand impersonation, or credential scam detected.",
+    "description": "Subtitle when page is dangerous"
+  },
+  "statusPausedTitle": {
+    "message": "Protection is Paused",
+    "description": "Title when protection is disabled"
+  },
+  "statusPausedDesc": {
+    "message": "Real-time link scanning, warnings, and blockers are currently turned off.",
+    "description": "Subtitle when protection is paused"
+  },
+  "statSitesChecked": {
+    "message": "Sites Checked",
+    "description": "Label for sites checked counter"
+  },
+  "statThreatsBlocked": {
+    "message": "Threats Blocked",
+    "description": "Label for threats blocked counter"
+  },
+  "statBlockedOnTab": {
+    "message": "Blocked on Tab",
+    "description": "Label for threats on current tab"
+  },
+  "statTotalBlocked": {
+    "message": "Total Blocked",
+    "description": "Label for all-time blocked threats"
+  },
+  "whyFlagged": {
+    "message": "Why was this flagged?",
+    "description": "Header for detection reasons"
+  },
+  "whySafe": {
+    "message": "Why is this safe?",
+    "description": "Header for safe explanation"
+  },
+  "noThreatsFound": {
+    "message": "All analyzed links and page structural elements are verified safe.",
+    "description": "Explanation when page is clean"
+  },
+  "overlayTitleDanger": {
+    "message": "Security Warning: Phishing / Deceptive Site Detected",
+    "description": "Heading for dangerous page overlay"
+  },
+  "overlayTitleWarning": {
+    "message": "Caution: Suspicious Website Flagged",
+    "description": "Heading for suspicious page overlay"
+  },
+  "overlayDesc": {
+    "message": "PhishShield AI detected that this destination appears to be a social engineering attack designed to harvest passwords, banking PINs, or personal data.",
+    "description": "Description for injected overlay"
+  },
+  "btnGoBack": {
+    "message": "Go back (Recommended)",
+    "description": "Button to navigate away"
+  },
+  "btnProceedAnyway": {
+    "message": "Proceed anyway (Unsafe)",
+    "description": "Button to bypass warning"
+  },
+  "btnTrustSite": {
+    "message": "Trust this site",
+    "description": "Button to add domain to trusted list"
+  },
+  "siteTrustedNotice": {
+    "message": "Site added to trusted domains.",
+    "description": "Notification when trusted"
+  },
+  "tooltipDestination": {
+    "message": "Destination:",
+    "description": "Tooltip label for destination domain"
+  },
+  "tooltipExpandsTo": {
+    "message": "Expands to:",
+    "description": "Tooltip label for expanded shortlink"
+  },
+  "tooltipStatusSafe": {
+    "message": "Safe Destination",
+    "description": "Tooltip status badge for safe links"
+  },
+  "tooltipStatusSuspicious": {
+    "message": "Suspicious Link",
+    "description": "Tooltip status badge for suspicious links"
+  },
+  "tooltipStatusDangerous": {
+    "message": "Dangerous Phishing Link",
+    "description": "Tooltip status badge for dangerous links"
+  },
+  "badgePhishing": {
+    "message": "PHISHING LINK: DO NOT TOUCH",
+    "description": "Inline badge for phishing links"
+  },
+  "openDashboard": {
+    "message": "Open Threat Dashboard",
+    "description": "Button to open dashboard"
+  },
+  "testLab": {
+    "message": "Test Lab",
+    "description": "Link to test lab"
+  },
+  "langToggle": {
+    "message": "አማርኛ",
+    "description": "Language toggle label"
+  }
+}

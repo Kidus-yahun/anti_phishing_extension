@@ -3,6 +3,14 @@
    Scoped styles for flagged links, inline warning badges, and floating pill
    ========================================================================== */
 
+@font-face {
+  font-family: 'Noto Sans Ethiopic';
+  font-style: normal;
+  font-weight: 400;
+  src: url('fonts/NotoSansEthiopic-Regular.woff2') format('woff2');
+  unicode-range: U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E;
+}
+
 /* 1. Flagged Phishing Link Highlighting */
 a.phishshield-flagged-link {
   outline: 2px dashed rgba(244, 63, 94, 0.85) !important;
@@ -31,7 +39,7 @@ a.phishshield-flagged-link:hover {
   -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
   backdrop-filter: blur(14px) saturate(160%) !important;
   color: #ffffff !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif !important;
+  font-family: 'Noto Sans Ethiopic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: 10px !important;
   font-weight: 600 !important;
   letter-spacing: 0.5px !important;
@@ -77,7 +85,7 @@ a.phishshield-flagged-link:hover {
   }
 }
 
-/* 3. Floating Security Pill (Matching Image 2 Frosted Glass) */
+/* 3. Floating Security Pill (Image 2 Frosted Glass Style) */
 #phishshield-floating-pill {
   position: fixed !important;
   bottom: 24px !important;
@@ -85,7 +93,7 @@ a.phishshield-flagged-link:hover {
   z-index: 2147483646 !important;
   user-select: none !important;
   pointer-events: auto !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif !important;
+  font-family: 'Noto Sans Ethiopic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
 .phishshield-pill-badge {
@@ -131,4 +139,14 @@ a.phishshield-flagged-link:hover {
   border-color: rgba(244, 63, 94, 0.4) !important;
   color: #fecdd3 !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38), 0 0 24px rgba(244, 63, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  animation: phishshield-pill-pulse 2.2s infinite ease-in-out !important;
+}
+
+@keyframes phishshield-pill-pulse {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 18px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 32px rgba(244, 63, 94, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
 }

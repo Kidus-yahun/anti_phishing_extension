@@ -1,7 +1,8 @@
 /**
- * PhishShield AI - Content Script
- * Real-time DOM link inspection, glassmorphic inline badges, click interception modal, and floating status pill.
- * Fully encapsulated in Shadow DOM for zero style interference from host webpages.
+ * PhishShield AI - Content Script (Manifest V3)
+ * Real-time DOM link inspection, floating security pill (Image 2 style),
+ * Shadow DOM warning overlay for risky pages, link-hover tooltips,
+ * Ethiopian phishing & Amharic scam detection, and bilingual support.
  */
 
 (() => {
@@ -12,19 +13,25 @@
   let flaggedThreats = [];
   let isScanning = false;
   let pillElement = null;
+  let tooltipElement = null;
+  let pageOverlayElement = null;
   let mutationObserver = null;
   let debounceTimer = null;
+  let activeLanguage = "en";
+  let pageSafetyResult = null;
+  let trustedDomainsList = [];
 
-  // Shadow DOM host reference
+  // Shadow DOM host reference (used strictly for overlays and tooltips to isolate styles)
   let shadowHost = null;
   let shadowRoot = null;
 
   // Intercept click listener store to allow clean removal
   const interceptedLinks = new Map();
+  const shortlinkCache = new Map();
 
-  // Modern SVG Icons (Image 2 Glassmorphism Style)
+  // Modern SVG Icons (Image 2 style with glow)
   const SVG_SHIELD_CHECK = `
-    <svg class="phishshield-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5));">
+    <svg class="phishshield-pill-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.5)); flex-shrink: 0;">
       <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="url(#phishshield-pill-gradient)"/>
       <path d="m9 12 2 2 4-4" stroke="#0b1120" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
       <defs>
@@ -56,14 +63,44 @@
       <line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg>`;
 
-  const SVG_STAY_SAFE_BTN = `
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  const SVG_SHIELD_ALERT = `
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      <path d="m9 12 2 2 4-4"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>`;
+
+  const SVG_ARROW_LEFT = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"/>
+      <polyline points="12 19 5 12 12 5"/>
+    </svg>`;
+
+  const SVG_CHECK_CIRCLE = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
     </svg>`;
 
   /**
-   * Acquire or initialize Shadow Root
+   * Helper translation function
+   */
+  function t(key) {
+    if (window.PhishShieldI18n && window.PhishShieldI18n.t) {
+      return window.PhishShieldI18n.t(key, activeLanguage);
+    }
+    return key;
+  }
+
+  function translateReason(reason) {
+    if (window.PhishShieldI18n && window.PhishShieldI18n.translateReason) {
+      return window.PhishShieldI18n.translateReason(reason, activeLanguage);
+    }
+    return reason;
+  }
+
+  /**
+   * Acquire or initialize Shadow Root for Overlays and Tooltips
    */
   function getShadowRoot() {
     if (shadowRoot && shadowHost && shadowHost.isConnected) {
@@ -76,8 +113,8 @@
       shadowHost.style.position = "fixed";
       shadowHost.style.top = "0";
       shadowHost.style.left = "0";
-      shadowHost.style.width = "0";
-      shadowHost.style.height = "0";
+      shadowHost.style.width = "100vw";
+      shadowHost.style.height = "100vh";
       shadowHost.style.zIndex = "2147483647";
       shadowHost.style.pointerEvents = "none";
       (document.body || document.documentElement).appendChild(shadowHost);
@@ -92,215 +129,206 @@
   }
 
   /**
-   * Inject complete glassmorphism styles into Shadow Root
+   * Inject complete glassmorphism styles and bundled font into Shadow Root
    */
   function injectShadowStyles(root) {
+    const fontUrl = chrome.runtime.getURL("fonts/NotoSansEthiopic-Regular.woff2");
     const style = document.createElement("style");
     style.textContent = `
+      @font-face {
+        font-family: 'Noto Sans Ethiopic';
+        font-style: normal;
+        font-weight: 400;
+        src: url('${fontUrl}') format('woff2');
+        unicode-range: U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E;
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Ethiopic", sans-serif;
+        font-family: 'Noto Sans Ethiopic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         -webkit-font-smoothing: antialiased;
       }
 
-      /* Floating Security Pill */
-      #phishshield-floating-pill {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 2147483646;
-        user-select: none;
-        pointer-events: auto;
-        transition: transform 200ms ease, opacity 200ms ease;
-      }
-
-      .phishshield-pill-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-        padding: 9px 18px;
-        border-radius: 9999px;
-        font-size: 13px;
-        font-weight: 500;
-        letter-spacing: 0.2px;
-        color: #e2e8f0;
-        cursor: pointer;
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
-        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
-      }
-
-      .phishshield-pill-badge:hover {
-        transform: translateY(-2px);
-      }
-
-      .phishshield-pill-badge:active {
-        transform: scale(0.98);
-      }
-
-      .phishshield-pill-safe {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.72) 0%, rgba(15, 23, 42, 0.82) 100%);
-        border-color: rgba(255, 255, 255, 0.18);
-        color: #e2e8f0;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.28);
-      }
-
-      .phishshield-pill-safe:hover {
-        background: linear-gradient(135deg, rgba(51, 65, 85, 0.8) 0%, rgba(30, 41, 59, 0.88) 100%);
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.42), 0 0 20px rgba(96, 165, 250, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-      }
-
-      .phishshield-pill-threat {
-        background: linear-gradient(135deg, rgba(39, 17, 26, 0.85) 0%, rgba(20, 10, 16, 0.92) 100%);
-        border-color: rgba(244, 63, 94, 0.4);
-        color: #fecdd3;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38), 0 0 24px rgba(244, 63, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-        animation: pill-pulse 2.2s infinite ease-in-out;
-      }
-
-      @keyframes pill-pulse {
-        0%, 100% {
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 18px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-        }
-        50% {
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 32px rgba(244, 63, 94, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-        }
-      }
-
-      /* Full-Screen Warning Modal */
-      #phishshield-modal-overlay {
+      /* Injected Full-Page Warning Overlay */
+      #phishshield-page-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(11, 13, 18, 0.72);
-        -webkit-backdrop-filter: blur(20px) saturate(160%);
-        backdrop-filter: blur(20px) saturate(160%);
+        background: rgba(11, 13, 20, 0.88);
+        -webkit-backdrop-filter: blur(28px) saturate(190%);
+        backdrop-filter: blur(28px) saturate(190%);
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 24px;
         pointer-events: auto;
         z-index: 2147483647;
-        animation: modal-fade 200ms cubic-bezier(0.16, 1, 0.3, 1);
+        animation: overlay-fade 240ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
-      @keyframes modal-fade {
-        from { opacity: 0; transform: scale(0.97); }
+      @keyframes overlay-fade {
+        from { opacity: 0; transform: scale(0.96); }
         to { opacity: 1; transform: scale(1); }
       }
 
-      #phishshield-modal-card {
-        background: rgba(21, 26, 38, 0.85);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
-        backdrop-filter: blur(24px) saturate(180%);
-        border: 1px solid rgba(244, 63, 94, 0.36);
-        border-radius: 20px;
-        max-width: 540px;
+      #phishshield-page-card {
+        background: rgba(19, 24, 37, 0.94);
+        -webkit-backdrop-filter: blur(32px);
+        backdrop-filter: blur(32px);
+        border: 1px solid rgba(244, 63, 94, 0.45);
+        border-radius: 24px;
+        max-width: 600px;
         width: 100%;
-        padding: 32px;
-        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55), 0 0 40px rgba(244, 63, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 36px 32px;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7), 0 0 48px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.25);
         color: #ffffff;
         text-align: center;
         position: relative;
-        overflow: hidden;
       }
 
-      #phishshield-modal-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 15%;
-        right: 15%;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(244, 63, 94, 0.8), transparent);
+      .phishshield-overlay-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
       }
 
-      .phishshield-modal-icon-wrap {
+      .phishshield-lang-pill-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: #93c5fd;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 180ms ease;
+      }
+
+      .phishshield-lang-pill-btn:hover {
+        background: rgba(96, 165, 250, 0.2);
+        border-color: rgba(96, 165, 250, 0.4);
+      }
+
+      .phishshield-risk-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        background: rgba(244, 63, 94, 0.18);
+        color: #fb7185;
+        border: 1px solid rgba(244, 63, 94, 0.35);
+      }
+
+      .phishshield-overlay-icon-wrap {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 64px;
-        height: 64px;
-        border-radius: 18px;
-        background: rgba(244, 63, 94, 0.12);
-        border: 1px solid rgba(244, 63, 94, 0.3);
-        box-shadow: 0 0 24px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        margin-bottom: 16px;
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        background: rgba(244, 63, 94, 0.14);
+        border: 1px solid rgba(244, 63, 94, 0.35);
+        box-shadow: 0 0 32px rgba(244, 63, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        margin-bottom: 18px;
       }
 
-      .phishshield-modal-title {
-        font-size: 18px;
-        font-weight: 600;
+      .phishshield-overlay-title {
+        font-size: 20px;
+        font-weight: 700;
         letter-spacing: -0.3px;
         color: #ffffff;
-        text-transform: uppercase;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
+        line-height: 1.3;
       }
 
-      .phishshield-modal-desc {
-        font-size: 13px;
+      .phishshield-overlay-desc {
+        font-size: 13.5px;
         font-weight: 400;
-        color: rgba(255, 255, 255, 0.65);
-        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.72);
+        line-height: 1.55;
         margin-bottom: 20px;
       }
 
       .phishshield-url-box {
-        background: rgba(0, 0, 0, 0.35);
+        background: rgba(0, 0, 0, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.14);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
         border-radius: 12px;
         padding: 12px 14px;
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 12px;
+        font-size: 12.5px;
         color: #fb7185;
         word-break: break-all;
-        margin-bottom: 18px;
+        margin-bottom: 20px;
         text-align: left;
+      }
+
+      .phishshield-why-container {
+        text-align: left;
+        margin-bottom: 24px;
+      }
+
+      .phishshield-why-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fecdd3;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 10px;
       }
 
       .phishshield-reasons-list {
         list-style: none;
         padding: 0;
-        margin: 0 0 24px 0;
-        text-align: left;
+        margin: 0;
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
 
       .phishshield-reasons-list li {
-        background: rgba(255, 255, 255, 0.06);
-        -webkit-backdrop-filter: blur(10px);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(244, 63, 94, 0.25);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(244, 63, 94, 0.22);
         border-radius: 10px;
-        padding: 9px 13px;
+        padding: 10px 14px;
         font-size: 12px;
-        color: #fca5a5;
+        color: #fda4af;
         display: flex;
-        align-items: center;
-        gap: 9px;
+        align-items: flex-start;
+        gap: 10px;
+        line-height: 1.45;
       }
 
-      .phishshield-modal-actions {
+      .phishshield-reasons-list li svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .phishshield-overlay-actions {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
       }
 
-      .phishshield-btn-safe {
+      .phishshield-btn-goback {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.28);
         padding: 13px 22px;
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 600;
         letter-spacing: 0.2px;
         border-radius: 12px;
@@ -309,33 +337,133 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
         transition: transform 180ms ease, box-shadow 180ms ease;
       }
 
-      .phishshield-btn-safe:hover {
+      .phishshield-btn-goback:hover {
         transform: translateY(-1px);
-        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
       }
 
-      .phishshield-btn-safe:active {
-        transform: scale(0.98);
+      .phishshield-btn-row {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
       }
 
-      .phishshield-btn-unsafe {
+      .phishshield-btn-trust {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.08);
+        color: #cbd5e1;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 180ms ease;
+      }
+
+      .phishshield-btn-trust:hover {
+        background: rgba(96, 165, 250, 0.16);
+        border-color: rgba(96, 165, 250, 0.35);
+        color: #93c5fd;
+      }
+
+      .phishshield-btn-proceed {
+        flex: 1;
         background: transparent;
         color: rgba(255, 255, 255, 0.5);
-        border: none;
-        padding: 8px;
+        border: 1px solid transparent;
+        padding: 10px 14px;
         font-size: 12px;
         font-weight: 500;
         cursor: pointer;
+        border-radius: 10px;
         text-decoration: underline;
         transition: color 180ms ease;
       }
 
-      .phishshield-btn-unsafe:hover {
+      .phishshield-btn-proceed:hover {
         color: #fb7185;
+      }
+
+      /* Link-Hover Tooltip */
+      #phishshield-link-tooltip {
+        position: fixed;
+        z-index: 2147483646;
+        pointer-events: none;
+        background: rgba(15, 23, 42, 0.94);
+        -webkit-backdrop-filter: blur(18px);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        padding: 8px 12px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.48), 0 0 14px rgba(96, 165, 250, 0.15);
+        color: #f1f5f9;
+        font-size: 12px;
+        max-width: 380px;
+        word-break: break-all;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 140ms ease, transform 140ms ease;
+      }
+
+      #phishshield-link-tooltip.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .phishshield-tt-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 4px;
+      }
+
+      .phishshield-tt-tag {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border-radius: 9999px;
+      }
+
+      .phishshield-tt-safe {
+        background: rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      .phishshield-tt-suspicious {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+
+      .phishshield-tt-danger {
+        background: rgba(239, 68, 68, 0.22);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+      }
+
+      .phishshield-tt-domain {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-weight: 600;
+        color: #60a5fa;
+      }
+
+      .phishshield-tt-reason {
+        font-size: 11px;
+        color: #fda4af;
+        margin-top: 3px;
+        line-height: 1.35;
       }
     `;
     root.appendChild(style);
@@ -345,36 +473,67 @@
    * Initialize state on page load
    */
   async function init() {
+    let isEnabled = true;
     try {
       if (chrome.storage && chrome.storage.local) {
-        const data = await chrome.storage.local.get("protectionEnabled");
-        const isEnabled = data.protectionEnabled !== false; // default true
+        const data = await chrome.storage.local.get(["protectionEnabled", "userLanguage", "trustedDomains"]);
+        isEnabled = data.protectionEnabled !== false; // default true
+        trustedDomainsList = Array.isArray(data.trustedDomains) ? data.trustedDomains : [];
 
-        if (isEnabled) {
-          enableProtection();
+        // Resolve active language
+        if (data.userLanguage === "am" || data.userLanguage === "en") {
+          activeLanguage = data.userLanguage;
+        } else if (window.PhishShieldI18n && window.PhishShieldI18n.isAmharicPage(document)) {
+          activeLanguage = "am";
+        } else {
+          activeLanguage = "en";
         }
       } else {
-        enableProtection();
+        isEnabled = true;
+        if (window.PhishShieldI18n && window.PhishShieldI18n.isAmharicPage(document)) {
+          activeLanguage = "am";
+        }
       }
     } catch (e) {
+      isEnabled = true;
+    }
+
+    if (isEnabled) {
       enableProtection();
     }
 
     setupStateListeners();
+    setupTooltipListener();
   }
 
   /**
-   * Listen for real-time toggle events from popup or storage changes
+   * Listen for real-time toggle events and storage changes
    */
   function setupStateListeners() {
     if (chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === "local" && changes.protectionEnabled !== undefined) {
-          const isEnabled = changes.protectionEnabled.newValue !== false;
-          if (isEnabled && !isProtectionActive) {
-            enableProtection();
-          } else if (!isEnabled && isProtectionActive) {
-            disableProtection();
+        if (areaName === "local") {
+          if (changes.protectionEnabled !== undefined) {
+            const isEnabled = changes.protectionEnabled.newValue !== false;
+            if (isEnabled && !isProtectionActive) {
+              enableProtection();
+            } else if (!isEnabled && isProtectionActive) {
+              disableProtection();
+            }
+          }
+          if (changes.userLanguage !== undefined) {
+            activeLanguage = changes.userLanguage.newValue || "en";
+            updateLanguageUI();
+          }
+          if (changes.trustedDomains !== undefined) {
+            trustedDomainsList = Array.isArray(changes.trustedDomains.newValue) ? changes.trustedDomains.newValue : [];
+            if (pageOverlayElement && window.PhishShieldHeuristics) {
+              const currentHost = window.location.hostname.replace(/^www\./, "");
+              if (trustedDomainsList.includes(currentHost)) {
+                removePageWarningOverlay();
+                notifyServiceWorker("safe", 0, []);
+              }
+            }
           }
         }
       });
@@ -386,6 +545,9 @@
           sendResponse({
             threatCount: flaggedThreats.length,
             active: isProtectionActive,
+            pageStatus: pageSafetyResult ? pageSafetyResult.status : "safe",
+            pageFlags: pageSafetyResult ? pageSafetyResult.flags : [],
+            language: activeLanguage,
             threats: flaggedThreats.map((t) => ({ url: t.url, flags: t.flags }))
           });
           return true;
@@ -399,24 +561,48 @@
           }
           sendResponse({ success: true, active: isProtectionActive });
         }
+
+        if (message.type === "SET_LANGUAGE") {
+          activeLanguage = message.language === "am" ? "am" : "en";
+          updateLanguageUI();
+          sendResponse({ success: true, language: activeLanguage });
+        }
       });
     }
   }
 
   /**
-   * TURN ON: Activate protection, scan links, start observer, show pill
+   * Update all text elements when language is changed
+   */
+  function updateLanguageUI() {
+    updatePill();
+    if (pageOverlayElement && pageSafetyResult) {
+      renderPageWarningOverlay(pageSafetyResult);
+    }
+  }
+
+  /**
+   * TURN ON: Evaluate page safety, activate protection, scan links, start observer, show pill
    */
   function enableProtection() {
     if (isProtectionActive) return;
     isProtectionActive = true;
 
+    // 1. Create floating pill in bottom corner (matching Image 2)
     createFloatingPill();
+
+    // 2. Evaluate current webpage safety
+    evaluateCurrentPageSafety();
+
+    // 3. Scan DOM links
     scanPageLinks();
+
+    // 4. Observe dynamic additions
     observeMutations();
   }
 
   /**
-   * TURN OFF: Completely clean DOM, remove badges, remove click handlers, hide pill
+   * TURN OFF: Completely clean DOM, remove badges, remove click handlers, hide pill & overlay
    */
   function disableProtection() {
     isProtectionActive = false;
@@ -431,11 +617,11 @@
       debounceTimer = null;
     }
 
-    // 2. Remove all injected warning badges in the host page
+    // 2. Remove all injected warning badges
     const badges = document.querySelectorAll(".phishshield-inline-badge");
     badges.forEach((b) => b.remove());
 
-    // 3. Remove flagged styling & click interception from links
+    // 3. Remove flagged styling & click interception
     interceptedLinks.forEach((handler, link) => {
       link.classList.remove("phishshield-flagged-link");
       link.removeAttribute("title");
@@ -444,25 +630,341 @@
     });
     interceptedLinks.clear();
 
-    // Reset inspected attributes on clean links
     document.querySelectorAll("a[data-phishshield-inspected]").forEach((a) => {
       a.removeAttribute("data-phishshield-inspected");
     });
 
-    // 4. Clean up Shadow DOM overlay elements
+    // 4. Remove floating pill
+    const existingPill = document.getElementById("phishshield-floating-pill");
+    if (existingPill) existingPill.remove();
+    pillElement = null;
+
+    // 5. Clean up Shadow DOM overlay elements
     if (shadowRoot) {
+      removePageWarningOverlay();
       const activeModal = shadowRoot.getElementById("phishshield-modal-overlay");
       if (activeModal) activeModal.remove();
 
-      if (pillElement) {
-        pillElement.remove();
-        pillElement = null;
+      if (tooltipElement) {
+        tooltipElement.remove();
+        tooltipElement = null;
       }
     }
 
-    // 5. Reset threats and notify service worker
+    // 6. Reset threats and notify service worker
     flaggedThreats = [];
-    notifyServiceWorker(0);
+    notifyServiceWorker("safe", 0, []);
+  }
+
+  /**
+   * Create floating security pill in the bottom corner (Image 2 style)
+   */
+  function createFloatingPill() {
+    if (!isProtectionActive) return;
+    if (document.getElementById("phishshield-floating-pill")) {
+      pillElement = document.getElementById("phishshield-floating-pill");
+      return;
+    }
+
+    if (!document.body) {
+      window.addEventListener("DOMContentLoaded", createFloatingPill, { once: true });
+      return;
+    }
+
+    pillElement = document.createElement("div");
+    pillElement.id = "phishshield-floating-pill";
+
+    const badge = document.createElement("div");
+    badge.className = "phishshield-pill-badge phishshield-pill-safe";
+    const protectedLabel = activeLanguage === "am" ? "ፊሽሺልድ፡ ጥበቃ ላይ" : "PhishShield: Protected";
+    badge.innerHTML = `${SVG_SHIELD_CHECK}<span>${protectedLabel}</span>`;
+
+    badge.addEventListener("click", () => {
+      if (!isProtectionActive) return;
+
+      if (flaggedThreats.length > 0) {
+        const firstThreat = flaggedThreats[0];
+        if (firstThreat && firstThreat.element) {
+          firstThreat.element.scrollIntoView({ behavior: "smooth", block: "center" });
+          showWarningModal(firstThreat.url, firstThreat.flags);
+        }
+      } else {
+        alert(activeLanguage === "am" ? "ፊሽሺልድ AI፡ በዚህ ገጽ ላይ ምንም ዓይነት አጠራጣሪ ወይም አደገኛ አገናኝ አልተገኘም።" : "PhishShield AI: No suspicious or phishing links found on this page.");
+      }
+    });
+
+    pillElement.appendChild(badge);
+    document.body.appendChild(pillElement);
+  }
+
+  /**
+   * Update floating pill status
+   */
+  function updatePill() {
+    if (!isProtectionActive) return;
+    if (!pillElement || !pillElement.isConnected) {
+      createFloatingPill();
+      if (!pillElement) return;
+    }
+
+    const badge = pillElement.querySelector(".phishshield-pill-badge");
+    if (!badge) return;
+
+    if (flaggedThreats.length > 0) {
+      badge.className = "phishshield-pill-badge phishshield-pill-threat";
+      const threatLabel = activeLanguage === "am" ? `${flaggedThreats.length} የማጭበርበሪያ አገናኝ ታግዷል` : `${flaggedThreats.length} Phishing Link${flaggedThreats.length > 1 ? "s" : ""} Blocked`;
+      badge.innerHTML = `${SVG_ALERT_OCTAGON}<span>${threatLabel}</span>`;
+    } else {
+      badge.className = "phishshield-pill-badge phishshield-pill-safe";
+      const protectedLabel = activeLanguage === "am" ? "ፊሽሺልድ፡ ጥበቃ ላይ" : "PhishShield: Protected";
+      badge.innerHTML = `${SVG_SHIELD_CHECK}<span>${protectedLabel}</span>`;
+    }
+  }
+
+  /**
+   * Evaluate the page itself for Ethiopian lookalikes, credential scams, or homographs
+   */
+  function evaluateCurrentPageSafety() {
+    if (!window.PhishShieldHeuristics || !window.PhishShieldHeuristics.evaluatePageSafety) return;
+
+    pageSafetyResult = window.PhishShieldHeuristics.evaluatePageSafety(
+      document,
+      window.location.hostname,
+      window.location.href,
+      trustedDomainsList
+    );
+
+    // If page is dangerous or suspicious and not trusted, show injected Shadow DOM overlay
+    if ((pageSafetyResult.status === "dangerous" || pageSafetyResult.status === "suspicious") && !pageSafetyResult.isTrusted) {
+      renderPageWarningOverlay(pageSafetyResult);
+    }
+
+    notifyServiceWorker(pageSafetyResult.status, flaggedThreats.length, pageSafetyResult.flags);
+  }
+
+  /**
+   * Render Injected Full-Page Warning Overlay inside Shadow DOM
+   */
+  function renderPageWarningOverlay(result) {
+    if (!isProtectionActive) return;
+    const root = getShadowRoot();
+    if (!root) return;
+
+    removePageWarningOverlay();
+
+    pageOverlayElement = document.createElement("div");
+    pageOverlayElement.id = "phishshield-page-overlay";
+
+    const isDangerous = result.status === "dangerous";
+    const titleText = isDangerous ? t("overlayTitleDanger") : t("overlayTitleWarning");
+    const safeUrl = String(result.url).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const reasonsHtml = result.flags.map((flag) => {
+      const localized = translateReason(flag);
+      return `<li>${SVG_ALERT_OCTAGON}<span>${localized}</span></li>`;
+    }).join("");
+
+    const card = document.createElement("div");
+    card.id = "phishshield-page-card";
+
+    card.innerHTML = `
+      <div class="phishshield-overlay-header-bar">
+        <span class="phishshield-risk-tag">${isDangerous ? "DANGEROUS / አደገኛ" : "SUSPICIOUS / አጠራጣሪ"}</span>
+        <button id="phishshield-overlay-lang-btn" class="phishshield-lang-pill-btn" title="Toggle Language">
+          ${activeLanguage === "am" ? "English" : "አማርኛ"}
+        </button>
+      </div>
+
+      <div class="phishshield-overlay-icon-wrap">
+        ${SVG_SHIELD_ALERT}
+      </div>
+
+      <h1 class="phishshield-overlay-title">${titleText}</h1>
+      <p class="phishshield-overlay-desc">${t("overlayDesc")}</p>
+
+      <div class="phishshield-url-box">${safeUrl}</div>
+
+      <div class="phishshield-why-container">
+        <div class="phishshield-why-title">
+          ${SVG_ALERT_OCTAGON}
+          <span>${t("whyFlagged")}</span>
+        </div>
+        <ul class="phishshield-reasons-list">
+          ${reasonsHtml}
+        </ul>
+      </div>
+
+      <div class="phishshield-overlay-actions">
+        <button id="phishshield-btn-goback" class="phishshield-btn-goback">
+          ${SVG_ARROW_LEFT}
+          <span>${t("btnGoBack")}</span>
+        </button>
+        <div class="phishshield-btn-row">
+          <button id="phishshield-btn-trust" class="phishshield-btn-trust">
+            ${SVG_CHECK_CIRCLE}
+            <span>${t("btnTrustSite")}</span>
+          </button>
+          <button id="phishshield-btn-proceed" class="phishshield-btn-proceed">
+            ${t("btnProceedAnyway")}
+          </button>
+        </div>
+      </div>
+    `;
+
+    pageOverlayElement.appendChild(card);
+    root.appendChild(pageOverlayElement);
+
+    // Event Handlers
+    card.querySelector("#phishshield-overlay-lang-btn").addEventListener("click", async () => {
+      activeLanguage = activeLanguage === "am" ? "en" : "am";
+      try {
+        await chrome.storage.local.set({ userLanguage: activeLanguage });
+      } catch (e) {}
+      renderPageWarningOverlay(result);
+    });
+
+    card.querySelector("#phishshield-btn-goback").addEventListener("click", () => {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = "about:blank";
+      }
+    });
+
+    card.querySelector("#phishshield-btn-proceed").addEventListener("click", () => {
+      const confirmMsg = t("confirmProceed");
+      if (confirm(confirmMsg)) {
+        removePageWarningOverlay();
+      }
+    });
+
+    card.querySelector("#phishshield-btn-trust").addEventListener("click", async () => {
+      const currentHost = window.location.hostname.replace(/^www\./, "");
+      try {
+        const data = await chrome.storage.local.get("trustedDomains");
+        const list = Array.isArray(data.trustedDomains) ? data.trustedDomains : [];
+        if (!list.includes(currentHost)) {
+          list.push(currentHost);
+          await chrome.storage.local.set({ trustedDomains: list });
+        }
+      } catch (e) {}
+      removePageWarningOverlay();
+      notifyServiceWorker("safe", flaggedThreats.length, []);
+      alert(t("siteTrustedNotice"));
+    });
+  }
+
+  function removePageWarningOverlay() {
+    if (pageOverlayElement) {
+      pageOverlayElement.remove();
+      pageOverlayElement = null;
+    }
+  }
+
+  /**
+   * Link-Hover Tooltip showing real destination domain and safety status
+   */
+  function setupTooltipListener() {
+    document.addEventListener("mouseover", handleLinkHover, true);
+    document.addEventListener("focusin", handleLinkHover, true);
+    document.addEventListener("mouseout", handleLinkUnhover, true);
+    document.addEventListener("focusout", handleLinkUnhover, true);
+    window.addEventListener("scroll", handleLinkUnhover, { passive: true });
+  }
+
+  async function handleLinkHover(e) {
+    if (!isProtectionActive) return;
+    const link = e.target.closest("a[href]");
+    if (!link) return;
+
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("javascript:") || href.startsWith("mailto:")) return;
+
+    let parsed;
+    try {
+      parsed = new URL(link.href, window.location.href);
+    } catch (err) {
+      return;
+    }
+
+    const host = parsed.hostname || "";
+    if (!host) return;
+
+    // Evaluate destination safety
+    const decodedHost = window.PhishShieldHeuristics ? window.PhishShieldHeuristics.toUnicodeHost(host) : host;
+    const isShort = window.PhishShieldHeuristics ? window.PhishShieldHeuristics.isShortlink(host) : false;
+    let evalResult = window.PhishShieldHeuristics ? window.PhishShieldHeuristics.evaluateLinkSafety(link, link.href) : { riskScore: 0, flags: [] };
+
+    let statusType = "safe";
+    let statusText = t("tooltipStatusSafe");
+    if (evalResult.riskScore >= 60) {
+      statusType = "danger";
+      statusText = t("tooltipStatusDangerous");
+    } else if (evalResult.riskScore >= 30) {
+      statusType = "suspicious";
+      statusText = t("tooltipStatusSuspicious");
+    }
+
+    let expandedHost = "";
+    if (isShort) {
+      if (shortlinkCache.has(link.href)) {
+        expandedHost = shortlinkCache.get(link.href);
+      } else {
+        chrome.runtime.sendMessage({ type: "EXPAND_SHORTLINK", url: link.href }, (resp) => {
+          if (resp && resp.expandedHost) {
+            shortlinkCache.set(link.href, resp.expandedHost);
+            if (tooltipElement && tooltipElement.classList.contains("visible")) {
+              const expEl = tooltipElement.querySelector(".phishshield-tt-expanded");
+              if (expEl) expEl.textContent = `${t("tooltipExpandsTo")} ${resp.expandedHost}`;
+            }
+          }
+        });
+      }
+    }
+
+    showLinkTooltip(link, decodedHost, statusType, statusText, evalResult.flags[0] || "", expandedHost);
+  }
+
+  function handleLinkUnhover(e) {
+    if (tooltipElement) {
+      tooltipElement.classList.remove("visible");
+    }
+  }
+
+  function showLinkTooltip(targetLink, domain, statusType, statusText, reason, expandedHost) {
+    const root = getShadowRoot();
+    if (!root) return;
+
+    if (!tooltipElement) {
+      tooltipElement = document.createElement("div");
+      tooltipElement.id = "phishshield-link-tooltip";
+      root.appendChild(tooltipElement);
+    }
+
+    const rect = targetLink.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return;
+
+    const tagClass = statusType === "danger" ? "phishshield-tt-danger" : statusType === "suspicious" ? "phishshield-tt-suspicious" : "phishshield-tt-safe";
+    const localizedReason = reason ? translateReason(reason) : "";
+
+    tooltipElement.innerHTML = `
+      <div class="phishshield-tt-top">
+        <span class="phishshield-tt-domain">${domain}</span>
+        <span class="phishshield-tt-tag ${tagClass}">${statusText}</span>
+      </div>
+      ${expandedHost ? `<div class="phishshield-tt-expanded" style="font-size:11px;color:#93c5fd;margin-top:2px;">${t("tooltipExpandsTo")} ${expandedHost}</div>` : ""}
+      ${localizedReason ? `<div class="phishshield-tt-reason">${localizedReason}</div>` : ""}
+    `;
+
+    const tooltipHeight = 44;
+    let top = rect.top - tooltipHeight - 6;
+    if (top < 10) {
+      top = rect.bottom + 6;
+    }
+    let left = Math.max(10, Math.min(rect.left, window.innerWidth - 320));
+
+    tooltipElement.style.top = `${top}px`;
+    tooltipElement.style.left = `${left}px`;
+    tooltipElement.classList.add("visible");
   }
 
   /**
@@ -473,7 +975,7 @@
     isScanning = true;
 
     try {
-      const allLinks = Array.from(document.querySelectorAll('a[href]:not([data-phishshield-inspected])'));
+      const allLinks = Array.from(document.querySelectorAll("a[href]:not([data-phishshield-inspected])"));
       const BATCH_SIZE = 25;
 
       for (let i = 0; i < allLinks.length; i += BATCH_SIZE) {
@@ -499,7 +1001,8 @@
 
       if (isProtectionActive) {
         updatePill();
-        notifyServiceWorker(flaggedThreats.length);
+        const overallStatus = pageSafetyResult && pageSafetyResult.status === "dangerous" ? "dangerous" : flaggedThreats.length > 0 ? "dangerous" : (pageSafetyResult && pageSafetyResult.status === "suspicious") ? "suspicious" : "safe";
+        notifyServiceWorker(overallStatus, flaggedThreats.length, pageSafetyResult ? pageSafetyResult.flags : []);
       }
     } catch (err) {
       console.error("[PhishShield AI] Error scanning links:", err);
@@ -509,7 +1012,7 @@
   }
 
   /**
-   * Evaluate a single anchor element using client structural checks and Laya AI Model
+   * Evaluate a single anchor element using structural checks, Ethiopian heuristics, and ML model
    */
   function inspectLink(link) {
     if (!isProtectionActive) return;
@@ -557,9 +1060,7 @@
           applyFlaggedThreat(link, modelEval);
         }
       });
-    } catch (e) {
-      // Ignored
-    }
+    } catch (e) {}
   }
 
   function applyFlaggedThreat(link, evaluation) {
@@ -575,7 +1076,9 @@
 
     applyThreatUI(link, evaluation);
     updatePill();
-    notifyServiceWorker(flaggedThreats.length);
+
+    const overallStatus = "dangerous";
+    notifyServiceWorker(overallStatus, flaggedThreats.length, pageSafetyResult ? pageSafetyResult.flags : []);
   }
 
   /**
@@ -587,11 +1090,11 @@
     link.classList.add("phishshield-flagged-link");
     link.setAttribute("title", "⚠️ PhishShield Warning: Potential Phishing Link!");
 
-    // Create high-visibility glass inline warning badge
+    // Create high-visibility inline warning badge
     const badge = document.createElement("span");
     badge.className = "phishshield-inline-badge";
-    badge.innerHTML = `${SVG_ALERT_BADGE}<span>PHISHING LINK: DO NOT TOUCH</span>`;
-    badge.setAttribute("title", evaluation.flags.join(" | "));
+    badge.innerHTML = `${SVG_ALERT_BADGE}<span>${t("badgePhishing")}</span>`;
+    badge.setAttribute("title", evaluation.flags.map((f) => translateReason(f)).join(" | "));
 
     badge.addEventListener("click", (e) => {
       e.preventDefault();
@@ -653,58 +1156,7 @@
   }
 
   /**
-   * Create floating security pill inside Shadow DOM
-   */
-  function createFloatingPill() {
-    if (!isProtectionActive) return;
-    const root = getShadowRoot();
-    if (!root || root.getElementById("phishshield-floating-pill")) return;
-
-    pillElement = document.createElement("div");
-    pillElement.id = "phishshield-floating-pill";
-
-    const badge = document.createElement("div");
-    badge.className = "phishshield-pill-badge phishshield-pill-safe";
-    badge.innerHTML = `${SVG_SHIELD_CHECK}<span>PhishShield: Protected</span>`;
-
-    badge.addEventListener("click", () => {
-      if (!isProtectionActive) return;
-
-      if (flaggedThreats.length > 0) {
-        const firstThreat = flaggedThreats[0];
-        if (firstThreat && firstThreat.element) {
-          firstThreat.element.scrollIntoView({ behavior: "smooth", block: "center" });
-          showWarningModal(firstThreat.url, firstThreat.flags);
-        }
-      } else {
-        alert("PhishShield AI: No suspicious or phishing links found on this page.");
-      }
-    });
-
-    pillElement.appendChild(badge);
-    root.appendChild(pillElement);
-  }
-
-  /**
-   * Update floating pill status inside Shadow DOM
-   */
-  function updatePill() {
-    if (!isProtectionActive || !pillElement) return;
-
-    const badge = pillElement.querySelector(".phishshield-pill-badge");
-    if (!badge) return;
-
-    if (flaggedThreats.length > 0) {
-      badge.className = "phishshield-pill-badge phishshield-pill-threat";
-      badge.innerHTML = `${SVG_ALERT_OCTAGON}<span>${flaggedThreats.length} Phishing Link${flaggedThreats.length > 1 ? "s" : ""} Blocked</span>`;
-    } else {
-      badge.className = "phishshield-pill-badge phishshield-pill-safe";
-      badge.innerHTML = `${SVG_SHIELD_CHECK}<span>PhishShield: Protected</span>`;
-    }
-  }
-
-  /**
-   * Show full-screen active warning modal inside Shadow DOM
+   * Show full-screen active warning modal for clicked link inside Shadow DOM
    */
   function showWarningModal(url, flags) {
     if (!isProtectionActive) return;
@@ -722,30 +1174,31 @@
     card.id = "phishshield-modal-card";
 
     const safeUrl = String(url).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const reasonsHtml = flags.map((f) => `<li>${SVG_ALERT_OCTAGON} <span>${f}</span></li>`).join("");
+    const reasonsHtml = flags.map((f) => `<li>${SVG_ALERT_OCTAGON} <span>${translateReason(f)}</span></li>`).join("");
 
     card.innerHTML = `
       <div class="phishshield-modal-icon-wrap">
         ${SVG_MODAL_HERO}
       </div>
-      <h2 class="phishshield-modal-title">Warning: Malicious Link Blocked</h2>
-      <p class="phishshield-modal-desc">
-        PhishShield AI detected that this destination is highly deceptive and appears to be a social engineering attack designed to harvest credentials or compromise your system.
-      </p>
+      <h2 class="phishshield-modal-title">${t("overlayTitleDanger")}</h2>
+      <p class="phishshield-modal-desc">${t("overlayDesc")}</p>
 
       <div class="phishshield-url-box">${safeUrl}</div>
 
-      <ul class="phishshield-reasons-list">
-        ${reasonsHtml}
-      </ul>
+      <div class="phishshield-why-container">
+        <div class="phishshield-why-title">${t("whyFlagged")}</div>
+        <ul class="phishshield-reasons-list">
+          ${reasonsHtml}
+        </ul>
+      </div>
 
       <div class="phishshield-modal-actions">
         <button id="phishshield-btn-stay-safe" class="phishshield-btn-safe">
-          ${SVG_STAY_SAFE_BTN}
-          <span>Stay Safe (Do Not Open)</span>
+          ${SVG_ARROW_LEFT}
+          <span>${t("btnGoBack")}</span>
         </button>
         <button id="phishshield-btn-proceed-unsafe" class="phishshield-btn-unsafe">
-          I understand the risks, proceed anyway (Unsafe)
+          ${t("btnProceedAnyway")}
         </button>
       </div>
     `;
@@ -758,7 +1211,7 @@
     });
 
     card.querySelector("#phishshield-btn-proceed-unsafe").addEventListener("click", () => {
-      if (confirm("DANGER: Are you sure you want to visit this flagged phishing site? Your accounts may be compromised.")) {
+      if (confirm(t("confirmProceed"))) {
         overlay.remove();
         window.location.href = url;
       }
@@ -772,19 +1225,21 @@
   }
 
   /**
-   * Notify service worker of detected threats on this tab
+   * Notify service worker of tab risk status and detected threats
    */
-  async function notifyServiceWorker(count) {
+  async function notifyServiceWorker(status = "safe", count = 0, flags = []) {
     try {
       if (chrome.runtime && chrome.runtime.sendMessage) {
         await chrome.runtime.sendMessage({
           type: "UPDATE_TAB_THREATS",
-          threatCount: count
+          status,
+          threatCount: count,
+          flags,
+          url: window.location.href,
+          host: window.location.hostname
         });
       }
-    } catch (e) {
-      // Ignored if extension context invalidated
-    }
+    } catch (e) {}
   }
 
   if (document.readyState === "loading") {
