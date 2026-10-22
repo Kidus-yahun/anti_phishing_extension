@@ -498,6 +498,18 @@
       isEnabled = true;
     }
 
+    // Load local Threat Intelligence Database into heuristics
+    try {
+      if (chrome.runtime && chrome.runtime.getURL) {
+        const feedUrl = chrome.runtime.getURL("threat_domains.json");
+        const res = await fetch(feedUrl);
+        const threatData = await res.json();
+        if (threatData && Array.isArray(threatData.domains) && window.PhishShieldHeuristics && window.PhishShieldHeuristics.initThreatDatabase) {
+          window.PhishShieldHeuristics.initThreatDatabase(threatData.domains);
+        }
+      }
+    } catch (e) {}
+
     if (isEnabled) {
       enableProtection();
     }

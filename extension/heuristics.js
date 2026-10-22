@@ -560,6 +560,30 @@ function checkAmharicCredentialScamInForms(doc = document, currentHost = "") {
   };
 }
 
+// Threat Intelligence Database (OpenPhish Community Feed & Verified IOCs)
+const KNOWN_THREAT_DOMAINS = new Set();
+
+function initThreatDatabase(domains) {
+  if (Array.isArray(domains)) {
+    domains.forEach((d) => {
+      const clean = (d || "").trim().toLowerCase().replace(/^www\./, "");
+      if (clean) KNOWN_THREAT_DOMAINS.add(clean);
+    });
+  }
+}
+
+function isKnownThreatDomain(host) {
+  if (!host) return false;
+  const clean = host.toLowerCase().replace(/^www\./, "");
+  if (KNOWN_THREAT_DOMAINS.has(clean)) return true;
+  const parts = clean.split(".");
+  for (let i = 1; i < parts.length - 1; i++) {
+    const parent = parts.slice(i).join(".");
+    if (KNOWN_THREAT_DOMAINS.has(parent)) return true;
+  }
+  return false;
+}
+
 /**
  * Comprehensive Page-Level Safety Evaluation
  */
@@ -577,6 +601,19 @@ function evaluatePageSafety(doc = document, host = window.location.hostname, url
       isTrusted: true,
       host: cleanHost,
       url
+    };
+  }
+
+  // 1b. Check Verified Threat Intelligence Database (OpenPhish / Community IOCs)
+  if (isKnownThreatDomain(cleanHost)) {
+    return {
+      status: "dangerous",
+      riskScore: 100,
+      flags: [`Confirmed phishing domain matched in Threat Intelligence Database (OpenPhish: ${cleanHost})`],
+      host: cleanHost,
+      url,
+      isTrusted: false,
+      isThreatDatabaseMatch: true
     };
   }
 
@@ -662,6 +699,19 @@ function evaluateLinkSafety(anchorEl, rawHref) {
     };
   }
 
+  // 1b. Check Verified Threat Intelligence Database (OpenPhish / Community IOCs)
+  const cleanLinkHost = (host || "").toLowerCase().replace(/^www\./, "");
+  if (isKnownThreatDomain(cleanLinkHost)) {
+    return {
+      isPhishing: true,
+      riskScore: 100,
+      host,
+      url: parsedUrl.href,
+      flags: [`Confirmed phishing destination matched in Threat Intelligence Database (OpenPhish: ${cleanLinkHost})`],
+      isThreatDatabaseMatch: true
+    };
+  }
+
   // 2. Ethiopian Brand Lookalikes
   const ethiopianLookalike = checkEthiopianBrandLookalike(host);
   if (ethiopianLookalike.isLookalike) {
@@ -736,6 +786,9 @@ const PhishShieldHeuristics = {
   checkAmharicCredentialScamInForms,
   evaluatePageSafety,
   evaluateLinkSafety,
+  initThreatDatabase,
+  isKnownThreatDomain,
+  KNOWN_THREAT_DOMAINS,
   ETHIOPIAN_TARGETS,
   AMHARIC_SCAM_PHRASES
 };

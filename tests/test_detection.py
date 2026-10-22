@@ -3,6 +3,7 @@ from app.core.url_analyzer import URLAnalyzer
 from app.core.header_analyzer import EmailHeaderAnalyzer
 from app.core.nlp_engine import NLPEngine
 from app.core.risk_scorer import RiskScorer
+from app.core.threat_db import ThreatDatabase
 
 def test_url_homograph_detection():
     # URL with Cyrillic 'а' replacing Latin 'a'
@@ -152,3 +153,58 @@ def test_laya_evaluate_url():
     assert phish_res["score"] >= 60.0
 
 
+
+
+def test_threat_intelligence_database():
+    """Verify offline threat intelligence database lookup and IOC matching."""
+    db = ThreatDatabase.get_instance()
+    
+    # 1. Verify statistics and loading
+    stats = db.get_stats()
+    assert stats["loaded"] is True
+    assert stats["total_domains"] > 0
+
+    # 2. Add and test a verified test indicator
+    test_phish_domain = "verified-phish-harvesting-bank.top"
+    ThreatDatabase._domains.add(test_phish_domain)
+
+    is_phish, info = db.is_known_phishing(f"http://{test_phish_domain}/login")
+    assert is_phish is True
+    assert info["threat_level"] == "CRITICAL"
+    assert "OpenPhish" in info["source"] or "Threat" in info["source"]
+
+    # 3. Test subdomain hierarchy matching
+    subdomain = f"auth.secure.{test_phish_domain}"
+    is_sub_phish, sub_info = db.is_known_phishing(subdomain)
+    assert is_sub_phish is True
+    assert sub_info["match_type"] == "parent_domain"
+
+    # 4. Verify legitimate domains are never falsely in threat database
+    is_safe, _ = db.is_known_phishing("https://google.com")
+    assert is_safe is False
+    is_safe_gh, _ = db.is_known_phishing("https://github.com/Kidus-yahun")
+    assert is_safe_gh is False
+
+def test_threat_database_url_analyzer_integration():
+    """Verify URLAnalyzer immediate 100% block for threat intelligence matches."""
+    db = ThreatDatabase.get_instance()
+    phish_site = "active-openphish-credential-stealer.xyz"
+    ThreatDatabase._domains.add(phish_site)
+
+    result = URLAnalyzer.analyze_url(f"http://{phish_site}/account-verify")
+    assert result["score"] == 100.0
+    assert any("Threat Intelligence Database" in f for f in result["flags"])
+    assert result["details"]["threat_database_match"] is not None
+
+def test_threat_database_nlp_evaluate_url():
+    """Verify NLPEngine.evaluate_url instant triage on threat intelligence matches."""
+    db = ThreatDatabase.get_instance()
+    phish_site = "confirmed-openphish-portal.cc"
+    ThreatDatabase._domains.add(phish_site)
+
+    nlp = NLPEngine(model_path="app/models/phishing_model.pkl")
+    res = nlp.evaluate_url(f"https://{phish_site}/login.html")
+    assert res["is_phishing"] is True
+    assert res["score"] == 100.0
+    assert res["confidence"] == 1.0
+    assert "Threat Intelligence Database" in res["model_used"]

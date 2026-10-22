@@ -359,6 +359,21 @@ class NLPEngine:
         if cache_key in self._url_cache:
             return self._url_cache[cache_key]
 
+        # 0. Check Verified Threat Intelligence Database (OpenPhish / Community Feeds)
+        from app.core.threat_db import ThreatDatabase
+        is_known, threat_info = ThreatDatabase.get_instance().is_known_phishing(url)
+        if is_known:
+            res = {
+                "is_phishing": True,
+                "score": 100.0,
+                "confidence": 1.0,
+                "flags": [f"Confirmed phishing threat matched in Threat Intelligence Database ({threat_info['source']}): {threat_info['reason']}"],
+                "reason": threat_info["reason"],
+                "model_used": f"Threat Intelligence Database ({threat_info['source']})"
+            }
+            self._url_cache[cache_key] = res
+            return res
+
         # 1. Structural Checks (Invariable cryptographic / protocol attacks)
         from urllib.parse import urlparse
         parsed = urlparse(url if "://" in url else "http://" + url)

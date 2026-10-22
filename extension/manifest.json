@@ -34,7 +34,8 @@
       "resources": [
         "fonts/NotoSansEthiopic-Regular.woff2",
         "icons/*",
-        "_locales/*"
+        "_locales/*",
+        "threat_domains.json"
       ],
       "matches": [
         "<all_urls>"

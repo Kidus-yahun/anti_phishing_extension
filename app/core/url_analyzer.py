@@ -83,7 +83,7 @@ def levenshtein_distance(s1: str, s2: str) -> int:
     return previous_row[-1]
 
 class URLAnalyzer:
-    """Heuristic and structural analyzer for detecting phishing URLs."""
+    """Heuristic, structural, and threat intelligence analyzer for detecting phishing URLs."""
 
     @classmethod
     def is_trusted_domain(cls, host: str) -> bool:
@@ -206,45 +206,65 @@ class URLAnalyzer:
                 }
             }
 
-        # 3. Check HTTP vs HTTPS
+        # 3. Check Threat Intelligence Database (OpenPhish / verified threat feed)
+        from app.core.threat_db import ThreatDatabase
+        is_known, threat_info = ThreatDatabase.get_instance().is_known_phishing(url_str)
+        if is_known:
+            flags.append(f"Confirmed phishing threat matched in Threat Intelligence Database ({threat_info['source']}): {threat_info['reason']}")
+            return {
+                "score": 100.0,
+                "flags": flags,
+                "details": {
+                    "host": host,
+                    "scheme": scheme,
+                    "tld": tld,
+                    "is_ip": cls.is_ip_address(host),
+                    "has_homograph": is_homograph,
+                    "is_typosquatting": False,
+                    "is_trusted": False,
+                    "threat_database_match": threat_info
+                }
+            }
+
+        # 4. Check HTTP vs HTTPS
         if scheme == "http":
             risk_score += 15.0
             flags.append("URL uses insecure HTTP protocol instead of HTTPS.")
 
-        # 4. Check IP Hostname
+        # 5. Check IP Hostname
         if cls.is_ip_address(host):
             risk_score += 35.0
             flags.append(f"URL uses a raw IP address ({host}) instead of a domain name.")
 
-        # 5. Check Typosquatting / Combosquatting
+        # 6. Check Typosquatting / Combosquatting
         is_typo, typo_msg, typo_weight = cls.check_typosquatting(host)
         if is_typo:
             risk_score += typo_weight
             flags.append(typo_msg)
 
-        # 6. Check Suspicious TLD
+        # 7. Check Suspicious TLD
         if tld in SUSPICIOUS_TLDS:
             risk_score += 25.0
             flags.append(f"Domain uses high-risk TLD (.{tld}).")
 
-        # 7. Check URL Shortener
+        # 8. Check URL Shortener
         if host in URL_SHORTENERS:
             risk_score += 20.0
             flags.append(f"URL uses shortener service ({host}) to obscure final destination.")
 
-        # 8. Check Excessive Subdomains
+        # 9. Check Excessive Subdomains
         subdomain_count = len(host.split(".")) - 2 if host else 0
         if subdomain_count >= 3:
             risk_score += 20.0
             flags.append(f"Domain contains an excessive number of subdomains ({subdomain_count}).")
 
-        # 9. Check @ symbol in userinfo/authority (http://google.com@attacker.com)
+        # 10. Check @ symbol in userinfo/authority (http://google.com@attacker.com)
         # Avoid false positives on path containing /@channel
         if parsed_url.username or parsed_url.password or (parsed_url.netloc and "@" in parsed_url.netloc):
             risk_score += 30.0
             flags.append("URL contains '@' symbol in authority used for credential embedding or host spoofing.")
 
-        # 10. Check suspicious path keywords
+        # 11. Check suspicious path keywords
         full_path = (path + "?" + query).lower()
         matched_keywords = [kw for kw in SUSPICIOUS_PATH_KEYWORDS if kw in full_path]
         if matched_keywords:

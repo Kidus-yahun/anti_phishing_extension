@@ -61,6 +61,12 @@ Here is why existing defenses fall short and why **PhishShield AI** is urgently 
 - Identifies display name spoofing (e.g., `"PayPal Support" <attacker@random.com>`).
 - Checks `From` vs `Return-Path` vs `Reply-To` domain alignment and SPF/DKIM/DMARC flags.
 
+### 5. 🗄️ Threat Intelligence Database & Feed Sync (OpenPhish IOCs)
+- **Local Threat Intelligence Engine (`ThreatDatabase`)**: Delivers sub-millisecond O(1) in-memory matching against confirmed phishing domains and URLs.
+- **Privacy-Preserving Offline Operation**: Threat feeds are maintained locally (`app/data/threat_feed.json` and `extension/threat_domains.json`), ensuring zero browsing URLs or user telemetry leave the client.
+- **Community Feed Integration**: Synchronizes real-time phishing indicators directly from open community feeds (OpenPhish Community Feed: `https://openphish.com/feed.txt`).
+- **Immediate 100% Critical Block**: Confirmed malicious links trigger immediate pre-click interception without requiring heavier inference compute.
+
 ---
 
 ## 📁 Directory Structure
