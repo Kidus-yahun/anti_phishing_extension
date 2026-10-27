@@ -140,7 +140,12 @@
    * Inject complete glassmorphism styles and bundled font into Shadow Root
    */
   function injectShadowStyles(root) {
-    const fontUrl = chrome.runtime.getURL("fonts/NotoSansEthiopic-Regular.woff2");
+    let fontUrl = "";
+    try {
+      if (isExtensionContextValid()) {
+        fontUrl = chrome.runtime.getURL("fonts/NotoSansEthiopic-Regular.woff2");
+      }
+    } catch (e) {}
     const style = document.createElement("style");
     style.textContent = `
       @font-face {
@@ -623,9 +628,22 @@
   }
 
   /**
+   * Check if extension context is valid (guards against invalidated runtime during reloads)
+   */
+  function isExtensionContextValid() {
+    try {
+      return Boolean(typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
    * Initialize state on page load
    */
   async function init() {
+    if (!isExtensionContextValid()) return;
+
     let isEnabled = true;
     try {
       if (chrome.storage && chrome.storage.local) {
@@ -650,18 +668,6 @@
     } catch (e) {
       isEnabled = true;
     }
-
-    // Load local Threat Intelligence Database into heuristics
-    try {
-      if (chrome.runtime && chrome.runtime.getURL) {
-        const feedUrl = chrome.runtime.getURL("threat_domains.json");
-        const res = await fetch(feedUrl);
-        const threatData = await res.json();
-        if (threatData && Array.isArray(threatData.domains) && window.PhishShieldHeuristics && window.PhishShieldHeuristics.initThreatDatabase) {
-          window.PhishShieldHeuristics.initThreatDatabase(threatData.domains);
-        }
-      }
-    } catch (e) {}
 
     if (isEnabled) {
       enableProtection();
@@ -1535,6 +1541,7 @@
    * Notify service worker of tab risk status and detected threats
    */
   async function notifyServiceWorker(status = "safe", count = 0, flags = []) {
+    if (!isExtensionContextValid()) return;
     try {
       if (chrome.runtime && chrome.runtime.sendMessage) {
         await chrome.runtime.sendMessage({
