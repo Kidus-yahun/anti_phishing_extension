@@ -257,10 +257,67 @@ function isOfficialDomain(host, officialDomains) {
 }
 
 /**
+ * Known trusted global tech, social, and infrastructure ecosystems
+ */
+const TRUSTED_DOMAINS = new Set([
+  // Google / Alphabet
+  "google.com", "youtube.com", "youtu.be", "ytimg.com", "ggpht.com", "googlevideo.com",
+  "gmail.com", "googleapis.com", "gstatic.com", "googletagmanager.com", "googleusercontent.com",
+  "google-analytics.com", "android.com", "chrome.com",
+
+  // GitHub & Developer Ecosystem
+  "github.com", "github.io", "githubstatus.com", "githubassets.com", "githubusercontent.com",
+  "github.community", "github.dev", "gh.io", "gitlab.com", "bitbucket.org",
+  "stackoverflow.com", "stackexchange.com", "npmjs.com", "pypi.org", "python.org",
+  "mozilla.org", "w3.org",
+
+  // Microsoft
+  "microsoft.com", "live.com", "office.com", "office365.com", "outlook.com", "bing.com",
+  "microsoftonline.com", "microsoftteams.com", "azure.com", "visualstudio.com",
+  "windows.com", "msn.com", "skype.com", "xbox.com", "azureedge.net",
+
+  // Apple
+  "apple.com", "icloud.com", "appleid.apple.com", "itunes.com", "cdn-apple.com",
+
+  // Amazon
+  "amazon.com", "aws.amazon.com", "amazonaws.com", "amazonpay.com", "media-amazon.com", "primevideo.com",
+
+  // Meta Ecosystem
+  "meta.com", "meta.ai", "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "messenger.com", "fbcdn.net", "threads.net",
+
+  // Social & Media
+  "twitter.com", "x.com", "t.co", "twimg.com", "linkedin.com", "licdn.com",
+  "reddit.com", "redditstatic.com", "netflix.com", "nflxext.com", "spotify.com", "scdn.co",
+  "twitch.tv", "discord.com", "discord.gg", "discordapp.com", "discordstatus.com",
+  "telegram.org", "t.me",
+
+  // Security, Infrastructure, Browsers & Common Services
+  "steamcommunity.com", "steampowered.com", "steamstatic.com",
+  "cloudflare.com", "cloudflarestatus.com", "statuspage.io",
+  "openai.com", "chatgpt.com", "wikipedia.org", "wikimedia.org", "medium.com", "adobe.com",
+  "opera.com", "mega.nz"
+]);
+
+/**
+ * Check if host belongs to an authenticated trusted ecosystem
+ */
+function isTrustedDomain(host) {
+  if (!host) return false;
+  const clean = host.toLowerCase().replace(/^www\./, "");
+  if (TRUSTED_DOMAINS.has(clean)) return true;
+  for (const trusted of TRUSTED_DOMAINS) {
+    if (clean.endsWith("." + trusted)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Check if a host is an Ethiopian brand lookalike using Levenshtein distance & combosquatting
  */
 function checkEthiopianBrandLookalike(host) {
-  if (!host) return { isLookalike: false, reason: "", score: 0, target: null };
+  if (!host || isTrustedDomain(host)) return { isLookalike: false, reason: "", score: 0, target: null };
 
   const unicodeHost = toUnicodeHost(host).toLowerCase().replace(/^www\./, "");
   const parts = unicodeHost.split(".");
@@ -295,9 +352,28 @@ function checkEthiopianBrandLookalike(host) {
           }
         }
 
-        // Levenshtein distance of 1 or 2 (typosquatting)
-        const dist = getLevenshteinDistance(token, brandToken);
-        if (dist > 0 && dist <= 2 && token.length >= 4) {
+        // Levenshtein distance typosquatting
+        // Require length-based threshold, prefix preservation, and character normalization
+        // to prevent false positives on completely unrelated short words (e.g. meta, mega, opera vs mpesa; apple, adobe vs amole)
+        const normToken = token
+          .replace(/0/g, "o")
+          .replace(/1/g, "l")
+          .replace(/3/g, "e")
+          .replace(/4/g, "a")
+          .replace(/5/g, "s")
+          .replace(/@/g, "a");
+
+        const dist = getLevenshteinDistance(normToken, brandToken);
+        const minLen = Math.min(normToken.length, brandToken.length);
+        const prefixLen = Math.min(2, minLen);
+        const samePrefix = normToken.slice(0, prefixLen) === brandToken.slice(0, prefixLen);
+        const lenDiff = Math.abs(normToken.length - brandToken.length);
+
+        const isTypoMatch = brandToken.length < 6
+          ? (dist === 1 && lenDiff <= 1 && samePrefix)
+          : (dist > 0 && dist <= 2 && lenDiff <= 2 && samePrefix);
+
+        if (isTypoMatch) {
           return {
             isLookalike: true,
             reason: `Lookalike of ${target.name} detected via character edit distance (${token} ~ ${brandToken}) in '${host}'`,
@@ -311,14 +387,22 @@ function checkEthiopianBrandLookalike(host) {
 
     // 2. Full SLD containment check
     for (const brandToken of target.brandTokens) {
-      if (sld.includes(brandToken) && !isOfficialDomain(unicodeHost, target.officialDomains)) {
-        return {
-          isLookalike: true,
-          reason: `Deceptive domain impersonating ${target.name} found in '${host}'`,
-          i18nKey: target.i18nKey,
-          target: target.name,
-          score: 85
-        };
+      const matchesSld = brandToken.length < 5
+        ? (tokens.includes(brandToken) || sld === brandToken || sld.startsWith(brandToken + "-") || sld.endsWith("-" + brandToken))
+        : sld.includes(brandToken);
+
+      if (matchesSld && !isOfficialDomain(unicodeHost, target.officialDomains)) {
+        const isLure = PHISHING_COMBO_LURES.some((kw) => sld.includes(kw));
+        const isBadTld = HIGH_RISK_TLDS.has(tld);
+        if (isLure || isBadTld || !unicodeHost.endsWith(".et") || brandToken.length >= 6) {
+          return {
+            isLookalike: true,
+            reason: `Deceptive domain impersonating ${target.name} found in '${host}'`,
+            i18nKey: target.i18nKey,
+            target: target.name,
+            score: 85
+          };
+        }
       }
     }
   }
@@ -396,7 +480,7 @@ function isShortlink(host) {
  * Check for intentional visual typosquatting on global brands
  */
 function checkGlobalTyposquatting(host) {
-  if (!host) return { isTypo: false, reason: "", score: 0 };
+  if (!host || isTrustedDomain(host)) return { isTypo: false, reason: "", score: 0 };
 
   const cleanHost = host.toLowerCase().replace(/^www\./, "");
   const parts = cleanHost.split(".");
@@ -592,16 +676,21 @@ function evaluatePageSafety(doc = document, host = window.location.hostname, url
   let score = 0;
   const cleanHost = (host || "").toLowerCase().replace(/^www\./, "");
 
-  // 1. Check user trusted domains
-  if (Array.isArray(trustedDomains) && trustedDomains.some((d) => cleanHost === d || cleanHost.endsWith("." + d))) {
-    return {
-      status: "safe",
-      riskScore: 0,
-      flags: [],
-      isTrusted: true,
-      host: cleanHost,
-      url
-    };
+  // 1. Check user trusted domains and authenticated ecosystem domains
+  const isEcosystemTrusted = isTrustedDomain(cleanHost);
+  const isUserTrusted = Array.isArray(trustedDomains) && trustedDomains.some((d) => cleanHost === d || cleanHost.endsWith("." + d));
+
+  if (isUserTrusted || isEcosystemTrusted) {
+    if (!checkMixedScriptAndHomograph(cleanHost).isHomograph && !isIpAddress(cleanHost)) {
+      return {
+        status: "safe",
+        riskScore: 0,
+        flags: [],
+        isTrusted: true,
+        host: cleanHost,
+        url
+      };
+    }
   }
 
   // 1b. Check Verified Threat Intelligence Database (OpenPhish / Community IOCs)
@@ -712,6 +801,46 @@ function evaluateLinkSafety(anchorEl, rawHref) {
     };
   }
 
+  // 1c. Structural Checks: Homograph Attacks, Raw IPs, Authority Credentials
+  const homograph = checkMixedScriptAndHomograph(host);
+  if (homograph.isHomograph) {
+    score += homograph.score;
+    flags.push(homograph.reason);
+  }
+
+  if (isIpAddress(host)) {
+    score += 75;
+    flags.push(`Raw IP address hostname used (${host})`);
+  }
+
+  if (parsedUrl.username || parsedUrl.password) {
+    score += 80;
+    flags.push("URL contains embedded credentials/hostname spoofing via authority '@'");
+  }
+
+  // 1d. Authenticated Trusted Ecosystem Domains (meta.com, google.com, github.com, etc.)
+  if (isTrustedDomain(cleanLinkHost) && !homograph.isHomograph && !parsedUrl.username && !parsedUrl.password) {
+    const anchorText = anchorEl ? anchorEl.innerText || anchorEl.textContent || "" : "";
+    const mismatchResult = checkAnchorTextMismatch(anchorText, parsedUrl, currentHost);
+    if (mismatchResult.isMismatch) {
+      return {
+        isPhishing: true,
+        riskScore: 75,
+        host,
+        url: parsedUrl.href,
+        flags: [mismatchResult.reason]
+      };
+    }
+    return {
+      isPhishing: false,
+      riskScore: 0,
+      host,
+      url: parsedUrl.href,
+      flags: [],
+      isTrusted: true
+    };
+  }
+
   // 2. Ethiopian Brand Lookalikes
   const ethiopianLookalike = checkEthiopianBrandLookalike(host);
   if (ethiopianLookalike.isLookalike) {
@@ -719,26 +848,7 @@ function evaluateLinkSafety(anchorEl, rawHref) {
     flags.push(ethiopianLookalike.reason);
   }
 
-  // 3. Mixed-Script & Homograph Attacks
-  const homograph = checkMixedScriptAndHomograph(host);
-  if (homograph.isHomograph) {
-    score += homograph.score;
-    flags.push(homograph.reason);
-  }
-
-  // 4. Raw IP Address Hostname
-  if (isIpAddress(host)) {
-    score += 75;
-    flags.push(`Raw IP address hostname used (${host})`);
-  }
-
-  // 5. Embedded Authority Credentials
-  if (parsedUrl.username || parsedUrl.password) {
-    score += 80;
-    flags.push("URL contains embedded credentials/hostname spoofing via authority '@'");
-  }
-
-  // 6. Deceptive Anchor Text Mismatch
+  // 3. Deceptive Anchor Text Mismatch
   const anchorText = anchorEl ? anchorEl.innerText || anchorEl.textContent || "" : "";
   const mismatchResult = checkAnchorTextMismatch(anchorText, parsedUrl, currentHost);
   if (mismatchResult.isMismatch) {
@@ -746,14 +856,14 @@ function evaluateLinkSafety(anchorEl, rawHref) {
     flags.push(mismatchResult.reason);
   }
 
-  // 7. Global Typosquatting
+  // 4. Global Typosquatting
   const typoResult = checkGlobalTyposquatting(host);
   if (typoResult.isTypo) {
     score += typoResult.score;
     flags.push(typoResult.reason);
   }
 
-  // 8. Shortlink Detection
+  // 5. Shortlink Detection
   if (isShortlink(host)) {
     score += 35;
     flags.push(`Shortened link detected (${host}) masking destination`);
@@ -778,6 +888,8 @@ const PhishShieldHeuristics = {
   isShortlink,
   isSameSiteOrSubdomain,
   isOfficialDomain,
+  isTrustedDomain,
+  TRUSTED_DOMAINS,
   isIpAddress,
   checkEthiopianBrandLookalike,
   checkMixedScriptAndHomograph,

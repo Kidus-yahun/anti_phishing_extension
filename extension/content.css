@@ -150,3 +150,219 @@ a.phishshield-flagged-link:hover {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 32px rgba(244, 63, 94, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   }
 }
+
+/* 4. Threat Inspector Panel (Anchored directly above floating pill) */
+#phishshield-threats-panel {
+  position: absolute !important;
+  bottom: calc(100% + 12px) !important;
+  right: 0 !important;
+  width: 380px !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: 480px !important;
+  background: rgba(15, 23, 42, 0.96) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 24px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  z-index: 2147483647 !important;
+  animation: phishshield-flyout-up 180ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: auto !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+}
+
+@keyframes phishshield-flyout-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.phishshield-panel-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.phishshield-panel-title-wrap {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  color: #fb7185 !important;
+}
+
+.phishshield-panel-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  letter-spacing: 0.2px !important;
+}
+
+.phishshield-panel-badge-count {
+  background: rgba(244, 63, 94, 0.25) !important;
+  color: #fb7185 !important;
+  border: 1px solid rgba(244, 63, 94, 0.45) !important;
+  border-radius: 9999px !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+
+.phishshield-panel-close-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #94a3b8 !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 150ms ease !important;
+  padding: 0 !important;
+}
+
+.phishshield-panel-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+}
+
+.phishshield-panel-desc {
+  font-size: 11.5px !important;
+  color: #94a3b8 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.phishshield-panel-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  overflow-y: auto !important;
+  max-height: 280px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.phishshield-panel-list::-webkit-scrollbar {
+  width: 5px !important;
+}
+
+.phishshield-panel-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 4px !important;
+}
+
+.phishshield-panel-item {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(244, 63, 94, 0.25) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  transition: all 150ms ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  text-align: left !important;
+}
+
+.phishshield-panel-item:hover {
+  background: rgba(244, 63, 94, 0.14) !important;
+  border-color: rgba(244, 63, 94, 0.55) !important;
+  transform: translateX(-2px) !important;
+}
+
+.phishshield-panel-item-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+
+.phishshield-panel-item-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #fb7185 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 230px !important;
+}
+
+.phishshield-panel-item-action {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #60a5fa !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.phishshield-panel-item-reason {
+  font-size: 11px !important;
+  color: #cbd5e1 !important;
+  line-height: 1.35 !important;
+}
+
+/* Toast for Safe / Clean Pages */
+#phishshield-safe-toast {
+  position: absolute !important;
+  bottom: calc(100% + 10px) !important;
+  right: 0 !important;
+  white-space: nowrap !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: #34d399 !important;
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 16px rgba(16, 185, 129, 0.2) !important;
+  animation: phishshield-flyout-up 180ms ease-out !important;
+  pointer-events: none !important;
+  z-index: 2147483647 !important;
+}
+
+/* Pulsing focus effect when jumping to an identified threat */
+@keyframes phishshield-focus-ring {
+  0% {
+    outline-color: #f43f5e !important;
+    outline-offset: 12px !important;
+    box-shadow: 0 0 40px rgba(244, 63, 94, 0.9) !important;
+  }
+  50% {
+    outline-color: #fb7185 !important;
+    outline-offset: 6px !important;
+    box-shadow: 0 0 24px rgba(244, 63, 94, 0.6) !important;
+  }
+  100% {
+    outline-color: rgba(244, 63, 94, 0.85) !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 14px rgba(244, 63, 94, 0.28) !important;
+  }
+}
+
+.phishshield-focused-threat {
+  animation: phishshield-focus-ring 1.8s ease-out !important;
+}

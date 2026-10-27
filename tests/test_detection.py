@@ -73,7 +73,11 @@ def test_legitimate_ecosystem_domains():
         "https://raw.githubusercontent.com/README.md",
         "https://www.youtube.com/@veritasium",
         "https://statuspage.io",
-        "https://discordstatus.com"
+        "https://discordstatus.com",
+        "https://about.meta.com/",
+        "https://www.meta.ai/",
+        "https://www.threads.net/",
+        "https://www.opera.com/"
     ]
     for url in trusted_urls:
         result = URLAnalyzer.analyze_url(url)

@@ -13,6 +13,8 @@
   let flaggedThreats = [];
   let isScanning = false;
   let pillElement = null;
+  let threatsPanelElement = null;
+  let safeToastTimer = null;
   let tooltipElement = null;
   let pageOverlayElement = null;
   let mutationObserver = null;
@@ -80,6 +82,12 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
       <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>`;
+
+  const SVG_CLOSE = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
     </svg>`;
 
   /**
@@ -465,6 +473,151 @@
         margin-top: 3px;
         line-height: 1.35;
       }
+
+      /* Intercept Click Modal Overlay */
+      #phishshield-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(11, 13, 20, 0.85);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        backdrop-filter: blur(20px) saturate(180%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        pointer-events: auto;
+        z-index: 2147483647;
+        animation: phishshield-modal-fade 180ms ease-out;
+      }
+
+      @keyframes phishshield-modal-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      #phishshield-modal-card {
+        position: relative;
+        background: linear-gradient(145deg, rgba(26, 16, 23, 0.96) 0%, rgba(15, 12, 19, 0.98) 100%);
+        border: 1px solid rgba(244, 63, 94, 0.4);
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 35px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        max-width: 520px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 32px 28px;
+        text-align: center;
+        color: #ffffff;
+        pointer-events: auto;
+        box-sizing: border-box;
+        animation: phishshield-card-scale 220ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes phishshield-card-scale {
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
+      }
+
+      #phishshield-modal-close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #94a3b8;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 150ms ease;
+      }
+
+      #phishshield-modal-close-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        transform: scale(1.06);
+      }
+
+      .phishshield-modal-icon-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: rgba(244, 63, 94, 0.15);
+        border: 1px solid rgba(244, 63, 94, 0.35);
+        box-shadow: 0 0 24px rgba(244, 63, 94, 0.3);
+        margin-bottom: 16px;
+      }
+
+      .phishshield-modal-title {
+        font-size: 19px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+        color: #ffffff;
+        margin-bottom: 8px;
+        line-height: 1.3;
+      }
+
+      .phishshield-modal-desc {
+        font-size: 13px;
+        font-weight: 400;
+        color: rgba(255, 255, 255, 0.72);
+        line-height: 1.5;
+        margin-bottom: 18px;
+      }
+
+      .phishshield-modal-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .phishshield-btn-safe {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        padding: 12px 22px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        transition: transform 150ms ease, box-shadow 150ms ease;
+      }
+
+      .phishshield-btn-safe:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 26px rgba(16, 185, 129, 0.48);
+      }
+
+      .phishshield-btn-unsafe {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.55);
+        border: 1px solid transparent;
+        padding: 8px 14px;
+        font-size: 12px;
+        cursor: pointer;
+        border-radius: 8px;
+        text-decoration: underline;
+        transition: color 150ms ease;
+      }
+
+      .phishshield-btn-unsafe:hover {
+        color: #fb7185;
+      }
     `;
     root.appendChild(style);
   }
@@ -647,6 +800,11 @@
     });
 
     // 4. Remove floating pill
+    closeThreatsPanel();
+    if (safeToastTimer) {
+      clearTimeout(safeToastTimer);
+      safeToastTimer = null;
+    }
     const existingPill = document.getElementById("phishshield-floating-pill");
     if (existingPill) existingPill.remove();
     pillElement = null;
@@ -666,6 +824,126 @@
     // 6. Reset threats and notify service worker
     flaggedThreats = [];
     notifyServiceWorker("safe", 0, []);
+  }
+
+  /**
+   * Close non-intrusive threats panel flyout
+   */
+  function closeThreatsPanel() {
+    if (threatsPanelElement) {
+      threatsPanelElement.remove();
+      threatsPanelElement = null;
+    }
+  }
+
+  /**
+   * Toggle sleek non-distracting threats list flyout anchored above the pill
+   */
+  function toggleThreatsPanel() {
+    if (threatsPanelElement) {
+      closeThreatsPanel();
+      return;
+    }
+
+    if (!pillElement || flaggedThreats.length === 0) return;
+
+    threatsPanelElement = document.createElement("div");
+    threatsPanelElement.id = "phishshield-threats-panel";
+
+    const titleText = activeLanguage === "am" ? "የተገኙ የማጭበርበሪያ አገናኞች" : "Detected Phishing Links";
+    const descText = activeLanguage === "am" ? "ወደ አገናኙ በቀጥታ ለመሄድ ይጫኑ፡" : "Click any threat to jump to its location on page:";
+    const locateLabel = activeLanguage === "am" ? "አሳይ" : "Jump to";
+
+    let itemsHtml = "";
+    flaggedThreats.forEach((threat, idx) => {
+      const cleanUrl = String(threat.url || "").replace(/^https?:\/\//i, "");
+      const primaryReason = threat.flags && threat.flags[0] ? translateReason(threat.flags[0]) : (activeLanguage === "am" ? "አደገኛ አገናኝ" : "Dangerous Phishing Destination");
+      itemsHtml += `
+        <li class="phishshield-panel-item" data-threat-index="${idx}">
+          <div class="phishshield-panel-item-top">
+            <span class="phishshield-panel-item-url" title="${threat.url}">${cleanUrl}</span>
+            <span class="phishshield-panel-item-action">
+              ${locateLabel}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+          </div>
+          <div class="phishshield-panel-item-reason">${primaryReason}</div>
+        </li>
+      `;
+    });
+
+    threatsPanelElement.innerHTML = `
+      <div class="phishshield-panel-header">
+        <div class="phishshield-panel-title-wrap">
+          ${SVG_ALERT_OCTAGON}
+          <span class="phishshield-panel-title">${titleText}</span>
+          <span class="phishshield-panel-badge-count">${flaggedThreats.length}</span>
+        </div>
+        <button class="phishshield-panel-close-btn" id="phishshield-close-threats-btn" aria-label="Close" title="Close">
+          ${SVG_CLOSE}
+        </button>
+      </div>
+      <p class="phishshield-panel-desc">${descText}</p>
+      <ul class="phishshield-panel-list">
+        ${itemsHtml}
+      </ul>
+    `;
+
+    pillElement.appendChild(threatsPanelElement);
+
+    threatsPanelElement.querySelector("#phishshield-close-threats-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeThreatsPanel();
+    });
+
+    threatsPanelElement.querySelectorAll(".phishshield-panel-item").forEach((item) => {
+      item.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const idx = parseInt(item.getAttribute("data-threat-index"), 10);
+        const threat = flaggedThreats[idx];
+        if (threat && threat.element) {
+          threat.element.scrollIntoView({ behavior: "smooth", block: "center" });
+          threat.element.classList.remove("phishshield-focused-threat");
+          void threat.element.offsetWidth;
+          threat.element.classList.add("phishshield-focused-threat");
+          setTimeout(() => {
+            if (threat.element) threat.element.classList.remove("phishshield-focused-threat");
+          }, 2000);
+        }
+      });
+    });
+
+    const outsideListener = (e) => {
+      if (threatsPanelElement && !threatsPanelElement.contains(e.target) && !pillElement.contains(e.target)) {
+        closeThreatsPanel();
+        document.removeEventListener("click", outsideListener);
+      }
+    };
+    setTimeout(() => document.addEventListener("click", outsideListener), 50);
+  }
+
+  /**
+   * Show brief non-intrusive safe toast when pill is tapped on a clean page
+   */
+  function showSafeToast() {
+    if (!pillElement) return;
+    const existing = pillElement.querySelector("#phishshield-safe-toast");
+    if (existing) existing.remove();
+    if (safeToastTimer) clearTimeout(safeToastTimer);
+
+    const toast = document.createElement("div");
+    toast.id = "phishshield-safe-toast";
+    const safeText = activeLanguage === "am" ? "ምንም ዓይነት አጠራጣሪ አገናኝ አልተገኘም። ገጹ ደህንነቱ የተጠበቀ ነው።" : "No threats found. All page links verified safe.";
+    toast.innerHTML = `${SVG_CHECK_CIRCLE}<span>${safeText}</span>`;
+    pillElement.appendChild(toast);
+
+    safeToastTimer = setTimeout(() => {
+      if (toast && toast.isConnected) toast.remove();
+      safeToastTimer = null;
+    }, 2800);
   }
 
   /**
@@ -691,17 +969,14 @@
     const protectedLabel = activeLanguage === "am" ? "ፊሽሺልድ፡ ጥበቃ ላይ" : "PhishShield: Protected";
     badge.innerHTML = `${SVG_SHIELD_CHECK}<span>${protectedLabel}</span>`;
 
-    badge.addEventListener("click", () => {
+    badge.addEventListener("click", (e) => {
+      e.stopPropagation();
       if (!isProtectionActive) return;
 
       if (flaggedThreats.length > 0) {
-        const firstThreat = flaggedThreats[0];
-        if (firstThreat && firstThreat.element) {
-          firstThreat.element.scrollIntoView({ behavior: "smooth", block: "center" });
-          showWarningModal(firstThreat.url, firstThreat.flags);
-        }
+        toggleThreatsPanel();
       } else {
-        alert(activeLanguage === "am" ? "ፊሽሺልድ AI፡ በዚህ ገጽ ላይ ምንም ዓይነት አጠራጣሪ ወይም አደገኛ አገናኝ አልተገኘም።" : "PhishShield AI: No suspicious or phishing links found on this page.");
+        showSafeToast();
       }
     });
 
@@ -727,6 +1002,9 @@
       const threatLabel = activeLanguage === "am" ? `${flaggedThreats.length} የማጭበርበሪያ አገናኝ ታግዷል` : `${flaggedThreats.length} Phishing Link${flaggedThreats.length > 1 ? "s" : ""} Blocked`;
       badge.innerHTML = `${SVG_ALERT_OCTAGON}<span>${threatLabel}</span>`;
     } else {
+      if (threatsPanelElement) {
+        closeThreatsPanel();
+      }
       badge.className = "phishshield-pill-badge phishshield-pill-safe";
       const protectedLabel = activeLanguage === "am" ? "ፊሽሺልድ፡ ጥበቃ ላይ" : "PhishShield: Protected";
       badge.innerHTML = `${SVG_SHIELD_CHECK}<span>${protectedLabel}</span>`;
@@ -1048,7 +1326,10 @@
 
       const linkHost = new URL(targetUrl, window.location.href).hostname || "";
       const currentHost = window.location.hostname || "";
-      if (window.PhishShieldHeuristics.isSameSiteOrSubdomain(linkHost, currentHost)) {
+      if (
+        window.PhishShieldHeuristics.isSameSiteOrSubdomain(linkHost, currentHost) ||
+        (window.PhishShieldHeuristics.isTrustedDomain && window.PhishShieldHeuristics.isTrustedDomain(linkHost))
+      ) {
         return;
       }
 
@@ -1189,6 +1470,9 @@
     const reasonsHtml = flags.map((f) => `<li>${SVG_ALERT_OCTAGON} <span>${translateReason(f)}</span></li>`).join("");
 
     card.innerHTML = `
+      <button id="phishshield-modal-close-btn" aria-label="Close" title="Close warning">
+        ${SVG_CLOSE}
+      </button>
       <div class="phishshield-modal-icon-wrap">
         ${SVG_MODAL_HERO}
       </div>
@@ -1218,20 +1502,31 @@
     overlay.appendChild(card);
     root.appendChild(overlay);
 
-    card.querySelector("#phishshield-btn-stay-safe").addEventListener("click", () => {
+    const closeModal = () => {
       overlay.remove();
-    });
+      document.removeEventListener("keydown", escHandler);
+    };
+
+    const escHandler = (e) => {
+      if (e.key === "Escape") {
+        closeModal();
+      }
+    };
+    document.addEventListener("keydown", escHandler);
+
+    card.querySelector("#phishshield-modal-close-btn").addEventListener("click", closeModal);
+    card.querySelector("#phishshield-btn-stay-safe").addEventListener("click", closeModal);
 
     card.querySelector("#phishshield-btn-proceed-unsafe").addEventListener("click", () => {
       if (confirm(t("confirmProceed"))) {
-        overlay.remove();
+        closeModal();
         window.location.href = url;
       }
     });
 
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) {
-        overlay.remove();
+        closeModal();
       }
     });
   }

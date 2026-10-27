@@ -26,8 +26,8 @@ TRUSTED_DOMAINS = {
     # Amazon
     "amazon.com", "aws.amazon.com", "amazonaws.com", "amazonpay.com", "media-amazon.com", "primevideo.com",
 
-    # Meta
-    "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "meta.com", "messenger.com", "fbcdn.net",
+    # Meta Ecosystem
+    "facebook.com", "fb.com", "instagram.com", "whatsapp.com", "meta.com", "meta.ai", "messenger.com", "fbcdn.net", "threads.net",
 
     # Social & Media
     "twitter.com", "x.com", "t.co", "twimg.com", "linkedin.com", "licdn.com",
@@ -35,10 +35,11 @@ TRUSTED_DOMAINS = {
     "twitch.tv", "discord.com", "discord.gg", "discordapp.com", "discordstatus.com",
     "telegram.org", "t.me",
 
-    # Security, Infrastructure & Services
+    # Security, Infrastructure, Browsers & Services
     "steamcommunity.com", "steampowered.com", "steamstatic.com",
     "cloudflare.com", "cloudflarestatus.com", "statuspage.io",
-    "openai.com", "chatgpt.com", "wikipedia.org", "wikimedia.org", "medium.com"
+    "openai.com", "chatgpt.com", "wikipedia.org", "wikimedia.org", "medium.com",
+    "adobe.com", "opera.com", "mega.nz"
 }
 
 # Target popular brands for typosquatting check
